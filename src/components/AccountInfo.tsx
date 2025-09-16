@@ -9,6 +9,9 @@ interface AccountInfoProps {
 
 export function AccountInfo({ account }: AccountInfoProps) {
   const marginLevel = account.margin_level || 0
+  const balance = account.balance || account.starting_balance || 0
+  const equity = account.equity || balance
+  const freeMargin = account.free_margin || 0
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -25,7 +28,7 @@ export function AccountInfo({ account }: AccountInfoProps) {
           <div>
             <p className="text-sm font-medium text-gray-600">Balance</p>
             <p className="text-lg font-semibold text-gray-900">
-              {account.balance.toFixed(2)} {account.currency}
+              {balance.toFixed(2)} {account.currency}
             </p>
           </div>
         </div>
@@ -37,7 +40,7 @@ export function AccountInfo({ account }: AccountInfoProps) {
           <div>
             <p className="text-sm font-medium text-gray-600">Equity</p>
             <p className="text-lg font-semibold text-gray-900">
-              {account.equity.toFixed(2)} {account.currency}
+              {equity.toFixed(2)} {account.currency}
             </p>
           </div>
         </div>
@@ -49,7 +52,7 @@ export function AccountInfo({ account }: AccountInfoProps) {
           <div>
             <p className="text-sm font-medium text-gray-600">Free Margin</p>
             <p className="text-lg font-semibold text-gray-900">
-              {account.free_margin.toFixed(2)} {account.currency}
+              {freeMargin.toFixed(2)} {account.currency}
             </p>
           </div>
         </div>

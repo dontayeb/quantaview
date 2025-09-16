@@ -16,6 +16,10 @@ export interface TradingAccount {
   currency: string
   account_type?: string
   starting_balance: number
+  balance?: number
+  equity?: number
+  free_margin?: number
+  margin_level?: number
   is_active: boolean
   created_at: string
   updated_at: string
