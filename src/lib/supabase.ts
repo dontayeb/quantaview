@@ -39,6 +39,7 @@ export interface Trade {
   trading_account_id: string
   position: number
   ticket?: number
+  magic_number?: number
   symbol: string
   type: 'buy' | 'sell'
   volume: number

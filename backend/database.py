@@ -17,11 +17,12 @@ engine = create_engine(
     DATABASE_URL,
     pool_pre_ping=True,
     pool_recycle=300,
-    pool_size=5,
-    max_overflow=10,
+    pool_size=3,
+    max_overflow=7,
     connect_args={
-        "connect_timeout": 10,
-        "application_name": "quantaview-api"
+        "connect_timeout": 30,
+        "application_name": "quantaview-api",
+        "options": "-c statement_timeout=30000"
     }
 )
 
