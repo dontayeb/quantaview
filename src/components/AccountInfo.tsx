@@ -75,7 +75,7 @@ export function AccountInfo({ account }: AccountInfoProps) {
       <div className="mt-4 pt-4 border-t border-gray-200">
         <div className="flex items-center justify-between text-sm text-gray-600">
           <span>Server: {account.server}</span>
-          <span>Broker: {account.company}</span>
+          <span>Broker: {account.broker || 'Not specified'}</span>
         </div>
       </div>
     </div>
