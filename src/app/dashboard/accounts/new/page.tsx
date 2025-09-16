@@ -117,11 +117,12 @@ export default function NewAccountPage() {
         .select()
         .single()
 
-      const timeoutPromise = new Promise((_, reject) => 
+      const timeoutPromise = new Promise<never>((_, reject) => 
         setTimeout(() => reject(new Error('Request timeout - operation took too long (10s)')), 10000)
       )
 
-      const { data, error } = await Promise.race([insertPromise, timeoutPromise])
+      const result = await Promise.race([insertPromise, timeoutPromise])
+      const { data, error } = result
       console.log('✅ Supabase insert response:', { data, error })
 
       if (error) {
