@@ -1,0 +1,444 @@
+'use client'
+
+import { useState } from 'react'
+import { PencilIcon, TrashIcon, XMarkIcon, CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { supabase } from '@/lib/supabase'
+import type { TradingAccount } from '@/lib/supabase'
+
+interface AccountManagerProps {
+  accounts: TradingAccount[]
+  selectedAccount: TradingAccount | null
+  onSelect: (account: TradingAccount) => void
+  onAccountsChange: () => void
+  loading?: boolean
+}
+
+interface EditingAccount {
+  id: string
+  account_name: string
+  account_number: number
+  server: string
+  broker: string
+  currency: string
+  account_type: string
+  starting_balance: number
+}
+
+export function AccountManager({ accounts, selectedAccount, onSelect, onAccountsChange, loading }: AccountManagerProps) {
+  const [editingAccount, setEditingAccount] = useState<EditingAccount | null>(null)
+  const [deletingAccountId, setDeletingAccountId] = useState<string | null>(null)
+  const [deletingTradesForAccountId, setDeletingTradesForAccountId] = useState<string | null>(null)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isDeletingTrades, setIsDeletingTrades] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleEditClick = (account: TradingAccount) => {
+    setEditingAccount({
+      id: account.id,
+      account_name: account.account_name,
+      account_number: account.account_number,
+      server: account.server,
+      broker: account.broker || '',
+      currency: account.currency,
+      account_type: account.account_type || '',
+      starting_balance: account.starting_balance
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingAccount(null)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!editingAccount) return
+
+    setIsSaving(true)
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .update({
+          account_name: editingAccount.account_name,
+          account_number: editingAccount.account_number,
+          server: editingAccount.server,
+          broker: editingAccount.broker || null,
+          currency: editingAccount.currency,
+          account_type: editingAccount.account_type || null,
+          starting_balance: editingAccount.starting_balance,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', editingAccount.id)
+
+      if (error) throw error
+
+      setEditingAccount(null)
+      onAccountsChange() // Refresh the accounts list
+    } catch (error) {
+      console.error('Error updating account:', error)
+      alert('Failed to update account. Please try again.')
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDeleteClick = (accountId: string) => {
+    setDeletingAccountId(accountId)
+  }
+
+  const handleConfirmDelete = async () => {
+    if (!deletingAccountId) return
+
+    setIsDeleting(true)
+    try {
+      const { error } = await supabase
+        .from('trading_accounts')
+        .delete()
+        .eq('id', deletingAccountId)
+
+      if (error) throw error
+
+      setDeletingAccountId(null)
+      
+      // If we deleted the selected account, we need to handle account selection
+      const isSelectedAccountDeleted = selectedAccount?.id === deletingAccountId
+      
+      // Refresh the accounts list first
+      onAccountsChange()
+      
+      // After refresh, if the selected account was deleted, the parent component
+      // will handle selecting a new account through the useTrades hook
+    } catch (error) {
+      console.error('Error deleting account:', error)
+      alert('Failed to delete account. Please try again.')
+    } finally {
+      setIsDeleting(false)
+    }
+  }
+
+  const handleCancelDelete = () => {
+    setDeletingAccountId(null)
+  }
+
+  const handleDeleteTradesClick = (accountId: string) => {
+    setDeletingTradesForAccountId(accountId)
+  }
+
+  const handleConfirmDeleteTrades = async () => {
+    if (!deletingTradesForAccountId) return
+
+    setIsDeletingTrades(true)
+    try {
+      const { error } = await supabase
+        .from('trades')
+        .delete()
+        .eq('trading_account_id', deletingTradesForAccountId)
+
+      if (error) throw error
+
+      setDeletingTradesForAccountId(null)
+      
+      // Refresh data if trades were deleted for the selected account
+      if (selectedAccount?.id === deletingTradesForAccountId) {
+        onAccountsChange()
+      }
+    } catch (error) {
+      console.error('Error deleting trades:', error)
+      alert('Failed to delete trades. Please try again.')
+    } finally {
+      setIsDeletingTrades(false)
+    }
+  }
+
+  const handleCancelDeleteTrades = () => {
+    setDeletingTradesForAccountId(null)
+  }
+
+  if (loading) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="animate-pulse">
+          <div className="h-6 bg-gray-200 rounded w-48 mb-4"></div>
+          <div className="space-y-3">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-16 bg-gray-100 rounded"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (accounts.length === 0) {
+    return (
+      <div className="bg-white rounded-lg shadow p-6">
+        <h3 className="text-lg font-semibold text-gray-900 mb-4">Trading Accounts</h3>
+        <div className="text-center py-8">
+          <div className="text-gray-400 text-lg mb-2">No accounts found</div>
+          <div className="text-gray-500 text-sm">Add your first trading account to get started</div>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h3 className="text-lg font-semibold text-gray-900 mb-4">Trading Accounts</h3>
+      
+      <div className="space-y-3">
+        {accounts.map((account) => (
+          <div
+            key={account.id}
+            className={`border rounded-lg p-4 transition-colors ${
+              selectedAccount?.id === account.id
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-200 hover:border-gray-300'
+            }`}
+          >
+            {editingAccount?.id === account.id ? (
+              // Edit mode
+              <div className="space-y-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <input
+                      type="text"
+                      value={editingAccount.account_name}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, account_name: e.target.value })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Number</label>
+                    <input
+                      type="number"
+                      value={editingAccount.account_number}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, account_number: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Server</label>
+                    <input
+                      type="text"
+                      value={editingAccount.server}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, server: e.target.value })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+                    <input
+                      type="text"
+                      value={editingAccount.broker}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, broker: e.target.value })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                    <select
+                      value={editingAccount.currency}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, currency: e.target.value })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                      <option value="JPY">JPY</option>
+                      <option value="CHF">CHF</option>
+                      <option value="CAD">CAD</option>
+                      <option value="AUD">AUD</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                    <select
+                      value={editingAccount.account_type}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, account_type: e.target.value })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="">Select type</option>
+                      <option value="demo">Demo</option>
+                      <option value="live">Live</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Starting Balance</label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editingAccount.starting_balance}
+                      onChange={(e) => setEditingAccount({ ...editingAccount, starting_balance: parseFloat(e.target.value) || 0 })}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex justify-end space-x-2">
+                  <button
+                    onClick={handleCancelEdit}
+                    disabled={isSaving}
+                    className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleSaveEdit}
+                    disabled={isSaving}
+                    className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    <CheckIcon className="h-4 w-4 mr-1" />
+                    {isSaving ? 'Saving...' : 'Save'}
+                  </button>
+                </div>
+              </div>
+            ) : (
+              // View mode
+              <>
+                <div className="flex items-center justify-between">
+                  <div 
+                    className="flex-1 cursor-pointer"
+                    onClick={() => onSelect(account)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="font-medium text-gray-900">{account.account_name}</h4>
+                        <div className="flex items-center space-x-2 text-sm text-gray-500">
+                          <span>#{account.account_number}</span>
+                          <span>•</span>
+                          <span>{account.server}</span>
+                          <span>•</span>
+                          <span>{account.currency}</span>
+                          {account.broker && (
+                            <>
+                              <span>•</span>
+                              <span>{account.broker}</span>
+                            </>
+                          )}
+                          {account.account_type && (
+                            <>
+                              <span>•</span>
+                              <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full capitalize ${
+                                account.account_type === 'live' 
+                                  ? 'bg-green-100 text-green-800' 
+                                  : 'bg-blue-100 text-blue-800'
+                              }`}>
+                                {account.account_type}
+                              </span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center space-x-1 ml-4">
+                    <button
+                      onClick={() => handleEditClick(account)}
+                      className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
+                      title="Edit account"
+                    >
+                      <PencilIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteTradesClick(account.id)}
+                      className="p-2 text-gray-400 hover:text-orange-600 rounded-full hover:bg-orange-50"
+                      title="Delete all trades for this account"
+                    >
+                      <ExclamationTriangleIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteClick(account.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                      title="Delete account"
+                    >
+                      <TrashIcon className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {selectedAccount?.id === account.id && (
+                  <div className="mt-2 text-sm text-blue-600 font-medium">
+                    ✓ Currently selected
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Delete Account Confirmation Modal */}
+      {deletingAccountId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex-shrink-0">
+                <TrashIcon className="h-6 w-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Delete Account</h3>
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete this trading account? This action cannot be undone. The trades will remain in the database.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDelete}
+                disabled={isDeleting}
+                className="px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
+              >
+                {isDeleting ? 'Deleting...' : 'Delete'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Trades Confirmation Modal */}
+      {deletingTradesForAccountId && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-sm w-full mx-4">
+            <div className="flex items-center space-x-3 mb-4">
+              <div className="flex-shrink-0">
+                <ExclamationTriangleIcon className="h-6 w-6 text-orange-600" />
+              </div>
+              <div>
+                <h3 className="text-lg font-medium text-gray-900">Delete All Trades</h3>
+                <p className="text-sm text-gray-500">
+                  Are you sure you want to delete all trades for this account? This action cannot be undone and will permanently remove all trading history.
+                </p>
+              </div>
+            </div>
+            
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={handleCancelDeleteTrades}
+                disabled={isDeletingTrades}
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-800"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleConfirmDeleteTrades}
+                disabled={isDeletingTrades}
+                className="px-4 py-2 text-sm bg-orange-600 text-white rounded-md hover:bg-orange-700 disabled:opacity-50"
+              >
+                {isDeletingTrades ? 'Deleting...' : 'Delete All Trades'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

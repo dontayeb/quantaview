@@ -1,0 +1,66 @@
+# Dependencies
+node_modules/
+backend/.venv/
+backend/venv/
+backend/__pycache__/
+backend/**/__pycache__/
+
+# Next.js
+.next/
+out/
+.vercel
+tsconfig.tsbuildinfo
+
+# Environment variables
+.env
+.env.local
+.env.production
+.env.development
+backend/.env
+
+# Database
+*.db
+*.sqlite
+
+# Logs
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Python
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+
+# Build artifacts
+dist/
+build/
+
+# Excel files (optional - remove if you want to include them)
+*.xlsx
+*.xls
+
+# Screenshots (optional - remove if you want to include them)
+Screenshot*.png
+
+# Package manager lock files (optional)
+# Uncomment if you want to ignore these
+# package-lock.json
+# yarn.lock
