@@ -1,7 +1,6 @@
 'use client'
 
-import { useState } from 'react'
-import { CalendarIcon, CurrencyDollarIcon, FunnelIcon, ClockIcon, GlobeAltIcon, ChevronDownIcon, ChevronUpIcon } from '@heroicons/react/24/outline'
+import { CalendarIcon, CurrencyDollarIcon, FunnelIcon, ClockIcon, GlobeAltIcon } from '@heroicons/react/24/outline'
 import type { Trade } from '@/lib/supabase'
 
 export interface TradeFilters {
@@ -21,7 +20,6 @@ interface TradeFiltersProps {
 }
 
 export function TradeFiltersComponent({ trades, filters, onFiltersChange, loading }: TradeFiltersProps) {
-  const [isExpanded, setIsExpanded] = useState(false)
   
   // Get unique symbols from trades
   const uniqueSymbols = Array.from(new Set(trades.map(t => t.symbol))).sort()
@@ -87,10 +85,7 @@ export function TradeFiltersComponent({ trades, filters, onFiltersChange, loadin
   return (
     <div className="bg-dashboard-card rounded-xl shadow-dashboard p-6">
       <div className="flex items-center justify-between mb-4">
-        <button
-          onClick={() => setIsExpanded(!isExpanded)}
-          className="flex items-center space-x-3 hover:text-dashboard-text transition-colors duration-200"
-        >
+        <div className="flex items-center space-x-3">
           <FunnelIcon className="h-5 w-5 text-dashboard-textLight" />
           <h3 className="text-lg font-medium text-dashboard-text">Filters</h3>
           {getActiveFilterCount() > 0 && (
@@ -98,25 +93,17 @@ export function TradeFiltersComponent({ trades, filters, onFiltersChange, loadin
               {getActiveFilterCount()} active
             </span>
           )}
-          {isExpanded ? (
-            <ChevronUpIcon className="h-4 w-4 text-dashboard-textLight" />
-          ) : (
-            <ChevronDownIcon className="h-4 w-4 text-dashboard-textLight" />
-          )}
+        </div>
+        <button
+          onClick={resetFilters}
+          className="text-sm text-dashboard-textLight hover:text-dashboard-text transition-colors duration-200"
+          disabled={getActiveFilterCount() === 0}
+        >
+          Reset
         </button>
-        {isExpanded && (
-          <button
-            onClick={resetFilters}
-            className="text-sm text-dashboard-textLight hover:text-dashboard-text transition-colors duration-200"
-            disabled={getActiveFilterCount() === 0}
-          >
-            Reset
-          </button>
-        )}
       </div>
 
-      {isExpanded && (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Symbol Filter */}
         <div>
           <div className="flex items-center justify-between mb-2">
@@ -244,8 +231,7 @@ export function TradeFiltersComponent({ trades, filters, onFiltersChange, loadin
             />
           </div>
         </div>
-        </div>
-      )}
+      </div>
     </div>
   )
 }
