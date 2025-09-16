@@ -1,10 +1,10 @@
 'use client'
 
-import { Account } from '@/lib/supabase'
+import { TradingAccount } from '@/lib/supabase'
 import { DollarSign, TrendingUp, Wallet, Shield } from 'lucide-react'
 
 interface AccountInfoProps {
-  account: Account
+  account: TradingAccount
 }
 
 export function AccountInfo({ account }: AccountInfoProps) {
