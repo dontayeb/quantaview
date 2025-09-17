@@ -14,7 +14,7 @@ import {
 
 export function UserNav() {
   const router = useRouter()
-  const { user, profile, signOut } = useAuth()
+  const { user, signOut } = useAuth()
 
   const handleSignOut = async () => {
     await signOut()
@@ -30,7 +30,7 @@ export function UserNav() {
           <span className="sr-only">Open user menu</span>
           <UserCircleIcon className="h-8 w-8" />
           <span className="ml-2 hidden sm:block font-medium">
-            {profile?.full_name || user.email?.split('@')[0]}
+            {user.full_name || user.email?.split('@')[0]}
           </span>
           <ChevronDownIcon className="ml-1 h-4 w-4" />
         </MenuButton>

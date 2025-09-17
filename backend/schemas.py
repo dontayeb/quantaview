@@ -46,6 +46,16 @@ class TradingAccountBase(BaseModel):
 class TradingAccountCreate(TradingAccountBase):
     user_id: UUID
 
+class TradingAccountUpdate(BaseModel):
+    account_name: Optional[str] = None
+    account_number: Optional[int] = None
+    password: Optional[str] = None
+    server: Optional[str] = None
+    broker: Optional[str] = None
+    account_type: Optional[str] = None
+    currency: Optional[str] = None
+    starting_balance: Optional[float] = None
+
 class TradingAccount(TradingAccountBase):
     id: UUID
     user_id: UUID

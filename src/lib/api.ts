@@ -179,6 +179,27 @@ class QuantaViewAPI {
     })
   }
 
+  async updateTradingAccount(accountId: string, updates: {
+    account_name?: string
+    account_number?: number
+    server?: string
+    broker?: string
+    currency?: string
+    account_type?: string
+    starting_balance?: number
+  }): Promise<TradingAccount> {
+    return this.request(`/api/v1/accounts/account/${accountId}`, {
+      method: 'PUT',
+      body: JSON.stringify(updates)
+    })
+  }
+
+  async deleteTradingAccount(accountId: string): Promise<{ message: string }> {
+    return this.request(`/api/v1/accounts/account/${accountId}`, {
+      method: 'DELETE'
+    })
+  }
+
   // Trades
   async getTrades(accountId: string): Promise<Trade[]> {
     return this.request(`/api/v1/trades/${accountId}`)

@@ -2,8 +2,7 @@
 
 import { useState } from 'react'
 import { PencilIcon, TrashIcon, XMarkIcon, CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
-import { supabase } from '@/lib/supabase'
-import type { TradingAccount } from '@/lib/supabase'
+import { quantaAPI, type TradingAccount } from '@/lib/api'
 
 interface AccountManagerProps {
   accounts: TradingAccount[]
@@ -54,21 +53,15 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
 
     setIsSaving(true)
     try {
-      const { error } = await supabase
-        .from('trading_accounts')
-        .update({
-          account_name: editingAccount.account_name,
-          account_number: editingAccount.account_number,
-          server: editingAccount.server,
-          broker: editingAccount.broker || null,
-          currency: editingAccount.currency,
-          account_type: editingAccount.account_type || null,
-          starting_balance: editingAccount.starting_balance,
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', editingAccount.id)
-
-      if (error) throw error
+      await quantaAPI.updateTradingAccount(editingAccount.id, {
+        account_name: editingAccount.account_name,
+        account_number: editingAccount.account_number,
+        server: editingAccount.server,
+        broker: editingAccount.broker || undefined,
+        currency: editingAccount.currency,
+        account_type: editingAccount.account_type || undefined,
+        starting_balance: editingAccount.starting_balance
+      })
 
       setEditingAccount(null)
       onAccountsChange() // Refresh the accounts list
@@ -89,12 +82,7 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
 
     setIsDeleting(true)
     try {
-      const { error } = await supabase
-        .from('trading_accounts')
-        .delete()
-        .eq('id', deletingAccountId)
-
-      if (error) throw error
+      await quantaAPI.deleteTradingAccount(deletingAccountId)
 
       setDeletingAccountId(null)
       
@@ -127,19 +115,11 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
 
     setIsDeletingTrades(true)
     try {
-      const { error } = await supabase
-        .from('trades')
-        .delete()
-        .eq('trading_account_id', deletingTradesForAccountId)
-
-      if (error) throw error
-
-      setDeletingTradesForAccountId(null)
+      // TODO: Implement delete trades API endpoint
+      // await quantaAPI.deleteTrades(deletingTradesForAccountId)
       
-      // Refresh data if trades were deleted for the selected account
-      if (selectedAccount?.id === deletingTradesForAccountId) {
-        onAccountsChange()
-      }
+      alert('Delete trades functionality not yet implemented with Railway API')
+      setDeletingTradesForAccountId(null)
     } catch (error) {
       console.error('Error deleting trades:', error)
       alert('Failed to delete trades. Please try again.')

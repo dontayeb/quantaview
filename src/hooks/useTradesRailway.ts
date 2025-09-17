@@ -28,8 +28,7 @@ export function useTrades(tradingAccountId?: string) {
   const [filters, setFilters] = useState<TradeFilters>({
     dateRange: { start: '', end: '' },
     symbols: [],
-    profitRange: { min: '', max: '' },
-    tradeTypes: []
+    sessions: []
   })
 
   // Load trading accounts

@@ -5,7 +5,7 @@ from uuid import UUID
 
 from database import get_db
 from models import TradingAccount as AccountModel
-from schemas import TradingAccount, TradingAccountCreate
+from schemas import TradingAccount, TradingAccountCreate, TradingAccountUpdate
 
 router = APIRouter()
 
@@ -31,3 +31,30 @@ async def get_account(account_id: UUID, db: Session = Depends(get_db)):
     if not account:
         raise HTTPException(status_code=404, detail="Account not found")
     return account
+
+@router.put("/account/{account_id}", response_model=TradingAccount)
+async def update_account(account_id: UUID, account_update: TradingAccountUpdate, db: Session = Depends(get_db)):
+    """Update a trading account"""
+    account = db.query(AccountModel).filter(AccountModel.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    # Update only provided fields
+    update_data = account_update.dict(exclude_unset=True)
+    for field, value in update_data.items():
+        setattr(account, field, value)
+    
+    db.commit()
+    db.refresh(account)
+    return account
+
+@router.delete("/account/{account_id}")
+async def delete_account(account_id: UUID, db: Session = Depends(get_db)):
+    """Delete a trading account"""
+    account = db.query(AccountModel).filter(AccountModel.id == account_id).first()
+    if not account:
+        raise HTTPException(status_code=404, detail="Account not found")
+    
+    db.delete(account)
+    db.commit()
+    return {"message": "Account deleted successfully"}

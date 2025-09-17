@@ -39,87 +39,54 @@ export function useTrades(tradingAccountId?: string) {
     if (!user) return
     
     try {
-      const { data, error } = await supabase
-        .from('trading_accounts')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('is_active', true)
-        .order('account_name', { ascending: true })
-
-      if (error) throw error
-      setTradingAccounts(data || [])
+      // Legacy hook - use useTradesRailway instead
+      console.warn('useTrades is deprecated, use useTradesRailway instead')
+      setTradingAccounts([])
+      setLoading(false)
+      return
       
-      // Check if currently selected account still exists
-      if (selectedAccount && data) {
-        const stillExists = data.find(acc => acc.id === selectedAccount.id)
-        if (!stillExists) {
-          // Selected account was deleted, select first available account
-          if (data.length > 0) {
-            setSelectedAccount(data[0])
-          } else {
-            setSelectedAccount(null)
-          }
-        }
-      }
-      
-      // Handle account selection priority:
-      // 1. URL parameter (tradingAccountId)
-      // 2. Restore last selected account from localStorage
-      // 3. No automatic selection
-      if (tradingAccountId && data) {
-        const account = data.find(acc => acc.id === tradingAccountId)
-        if (account) setSelectedAccount(account)
-      } else if (!selectedAccount && data && data.length > 0 && typeof window !== 'undefined') {
-        // Try to restore last selected account
-        const lastSelectedId = localStorage.getItem('quantaview-selected-account')
-        if (lastSelectedId) {
-          const lastAccount = data.find(acc => acc.id === lastSelectedId)
-          if (lastAccount) {
-            setSelectedAccount(lastAccount)
-          }
-        }
-      }
+      // Legacy code commented out - use useTradesRailway instead
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch trading accounts')
       console.error('Error fetching trading accounts:', err)
     }
   }
 
-  const fetchTrades = async (accountId?: string, isRealTimeUpdate = false) => {
-    if (!accountId && !selectedAccount) return
-
-    try {
-      // Only show loading for initial fetches, not real-time updates
-      if (!isRealTimeUpdate) {
-        setLoading(true)
-      }
-      setError(null)
-      const targetAccountId = accountId || selectedAccount?.id
-      
-      console.log(`Fetching trades for account: ${targetAccountId}`)
-      
-      const { data, error } = await supabase
-        .from('trades')
-        .select('*')
-        .eq('trading_account_id', targetAccountId)
-        .order('open_time', { ascending: false })
-
-      if (error) {
-        console.error('Supabase error:', error)
-        throw error
-      }
-      
-      console.log(`Fetched ${data?.length || 0} trades`)
-      setAllTrades(data || [])
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to fetch trades')
-      console.error('Error fetching trades:', err)
-      // Don't clear trades on error, keep showing existing data
-    } finally {
-      // Always set loading to false, regardless of real-time update flag
-      setLoading(false)
-    }
-  }
+//   const fetchTrades = async (accountId?: string, isRealTimeUpdate = false) => {
+//     if (!accountId && !selectedAccount) return
+// 
+//     try {
+//       // Only show loading for initial fetches, not real-time updates
+//       if (!isRealTimeUpdate) {
+//         setLoading(true)
+//       }
+//       setError(null)
+//       const targetAccountId = accountId || selectedAccount?.id
+//       
+//       console.log(`Fetching trades for account: ${targetAccountId}`)
+//       
+//       const { data, error } = await supabase
+//         .from('trades')
+//         .select('*')
+//         .eq('trading_account_id', targetAccountId)
+//         .order('open_time', { ascending: false })
+// 
+//       if (error) {
+//         console.error('Supabase error:', error)
+//         throw error
+//       }
+//       
+//       console.log(`Fetched ${data?.length || 0} trades`)
+//       setAllTrades(data || [])
+//     } catch (err) {
+//       setError(err instanceof Error ? err.message : 'Failed to fetch trades')
+//       console.error('Error fetching trades:', err)
+//       // Don't clear trades on error, keep showing existing data
+//     } finally {
+//       // Always set loading to false, regardless of real-time update flag
+//       setLoading(false)
+//     }
+//   }
 
   const selectAccount = (account: TradingAccount) => {
     setSelectedAccount(account)
@@ -127,8 +94,8 @@ export function useTrades(tradingAccountId?: string) {
     if (typeof window !== 'undefined') {
       localStorage.setItem('quantaview-selected-account', account.id)
     }
-    // fetchTrades already handles loading state internally
-    fetchTrades(account.id)
+    // Legacy function disabled
+    // fetchTrades(account.id)
   }
 
   const refetch = async () => {
@@ -136,7 +103,7 @@ export function useTrades(tradingAccountId?: string) {
     try {
       await Promise.all([
         fetchTradingAccounts(),
-        selectedAccount ? fetchTrades(selectedAccount.id, true) : Promise.resolve()
+        Promise.resolve() // fetchTrades disabled
       ])
     } finally {
       setLoading(false)
@@ -164,7 +131,7 @@ export function useTrades(tradingAccountId?: string) {
   useEffect(() => {
     if (selectedAccount) {
       // fetchTrades already handles loading state internally
-      fetchTrades(selectedAccount.id)
+      // fetchTrades(selectedAccount.id) // disabled
     }
   }, [selectedAccount])
 
@@ -183,65 +150,11 @@ export function useTrades(tradingAccountId?: string) {
     const tradesChannelName = `trades-${selectedAccountId}-${timestamp}`
     const accountsChannelName = `accounts-${userId}-${timestamp}`
 
-    const tradesChannel = supabase
-      .channel(tradesChannelName)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trades' },
-        (payload) => {
-          if (!isMounted) return
-          
-          console.log('Trades change detected:', payload.eventType)
-          const newRecord = payload.new as any
-          const oldRecord = payload.old as any
-          
-          if (newRecord?.trading_account_id === selectedAccountId || 
-              oldRecord?.trading_account_id === selectedAccountId) {
-            console.log('Refetching trades due to subscription update')
-            fetchTrades(selectedAccountId, true)
-          }
-        }
-      )
-      .subscribe((status) => {
-        console.log(`Trades subscription status: ${status}`)
-        // Don't let subscription errors affect loading state
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('Trades subscription error - continuing without real-time updates')
-        }
-      })
-
-    const accountsChannel = supabase
-      .channel(accountsChannelName)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table: 'trading_accounts' },
-        () => {
-          if (!isMounted) return
-          console.log('Trading accounts change detected')
-          fetchTradingAccounts()
-        }
-      )
-      .subscribe((status) => {
-        console.log(`Accounts subscription status: ${status}`)
-        // Don't let subscription errors affect loading state
-        if (status === 'CHANNEL_ERROR') {
-          console.warn('Accounts subscription error - continuing without real-time updates')
-        }
-      })
-
+    // Legacy subscriptions disabled
+    console.warn('Real-time subscriptions disabled in legacy hook')
+    
     return () => {
-      console.log(`Cleaning up subscriptions for account: ${selectedAccountId}`)
-      isMounted = false
-      
-      // Immediate cleanup
-      tradesChannel.unsubscribe()
-      accountsChannel.unsubscribe()
-      
-      // Additional cleanup with slight delay
-      setTimeout(() => {
-        supabase.removeChannel(tradesChannel)
-        supabase.removeChannel(accountsChannel)
-      }, 50)
+      // No cleanup needed
     }
   }, [selectedAccount?.id, user?.id])
 
@@ -259,7 +172,7 @@ export function useTrades(tradingAccountId?: string) {
         const lastUpdate = localStorage.getItem(`quantaview-last-update-${selectedAccount.id}`)
         
         if (!lastUpdate || parseInt(lastUpdate) < thirtySecondsAgo) {
-          fetchTrades(selectedAccount.id, true) // Use true to avoid showing loading spinner
+          // fetchTrades(selectedAccount.id, true) // disabled
           localStorage.setItem(`quantaview-last-update-${selectedAccount.id}`, Date.now().toString())
         }
       }

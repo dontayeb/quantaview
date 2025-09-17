@@ -53,6 +53,26 @@ export interface Trade {
   updated_at: string
 }
 
+export interface Deal {
+  id: string
+  trading_account_id: string
+  deal_id: number
+  time: string
+  symbol: string
+  type: string
+  direction: string
+  volume: number
+  price: number
+  order_id?: number
+  commission: number
+  fee: number
+  swap: number
+  profit: number
+  balance?: number
+  comment?: string
+  created_at: string
+}
+
 // Stub supabase client - not functional, just prevents import errors
 export const supabase = {
   from: () => ({
