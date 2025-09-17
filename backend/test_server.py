@@ -45,6 +45,6 @@ async def test_analytics():
 if __name__ == "__main__":
     import uvicorn
     print("Starting QuantaView Test Server...")
-    print("Visit: http://localhost:8000")
-    print("Visit: http://localhost:8000/test-analytics")
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    print("Visit: http://localhost:8080")
+    print("Visit: http://localhost:8080/test-analytics")
+    uvicorn.run(app, host="0.0.0.0", port=8080)
