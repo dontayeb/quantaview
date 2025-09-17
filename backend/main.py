@@ -35,25 +35,16 @@ app.add_middleware(
 # Try to include routers with database connection, fallback to basic endpoints
 try:
     from database import get_db
-    from routers import trades, accounts, analytics, mock_analytics, api_keys, algorithms
+    from routers import trades, accounts, analytics, api_keys, algorithms
     
     app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
     app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
-    app.include_router(mock_analytics.router, prefix="/api/v1/analytics", tags=["mock-analytics"])
     app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["api-keys"])
     app.include_router(algorithms.router, prefix="/api/v1/algorithms", tags=["algorithms"])
     logging.info("Database connection successful - Full API enabled")
 except Exception as e:
     logging.warning(f"Database connection failed: {e} - Running with basic endpoints only")
-    
-    # Include mock analytics even if database fails
-    try:
-        from routers import mock_analytics
-        app.include_router(mock_analytics.router, prefix="/api/v1/analytics", tags=["mock-analytics"])
-        logging.info("Mock analytics enabled for testing")
-    except Exception as mock_error:
-        logging.error(f"Failed to load mock analytics: {mock_error}")
     
     @app.get("/api/v1/analytics/test")
     async def test_analytics():
@@ -83,4 +74,5 @@ async def health_check():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    port = int(os.getenv("API_PORT", 8000))
+    uvicorn.run(app, host="0.0.0.0", port=port)

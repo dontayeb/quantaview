@@ -44,6 +44,49 @@ interface HeatmapData {
   min_profit: number
 }
 
+interface TradingAccount {
+  id: string
+  user_id: string
+  account_number: number
+  account_name: string
+  password: string
+  server: string
+  broker?: string
+  currency: string
+  account_type?: string
+  starting_balance: number
+  balance?: number
+  equity?: number
+  free_margin?: number
+  margin_level?: number
+  is_active: boolean
+  created_at: string
+  updated_at: string
+}
+
+interface Trade {
+  id: string
+  trading_account_id: string
+  position: number
+  ticket?: number
+  magic_number?: number
+  symbol: string
+  type: 'buy' | 'sell'
+  volume: number
+  open_time: string
+  open_price: number
+  close_time?: string
+  close_price?: number
+  stop_loss?: number
+  take_profit?: number
+  profit: number
+  commission: number
+  swap: number
+  comment?: string
+  created_at: string
+  updated_at: string
+}
+
 class QuantaViewAPI {
   private baseUrl: string
 
@@ -52,7 +95,12 @@ class QuantaViewAPI {
   }
 
   private async request<T>(endpoint: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${endpoint}`)
+    const response = await fetch(`${this.baseUrl}${endpoint}`, {
+      headers: {
+        'Authorization': 'Bearer test_token',
+        'Content-Type': 'application/json',
+      },
+    })
     
     if (!response.ok) {
       throw new Error(`API request failed: ${response.status} ${response.statusText}`)
@@ -61,7 +109,7 @@ class QuantaViewAPI {
     return response.json()
   }
 
-  // AI Insights
+  // AI Insights (from Railway database)
   async getTradingInsights(accountId: string): Promise<PatternInsight[]> {
     return this.request(`/api/v1/analytics/insights/${accountId}`)
   }
@@ -101,6 +149,24 @@ class QuantaViewAPI {
     return this.request(`/api/v1/analytics/lot-size-analysis/${accountId}`)
   }
 
+  // Trading Accounts
+  async getTradingAccounts(userId: string): Promise<TradingAccount[]> {
+    return this.request(`/api/v1/accounts/${userId}`)
+  }
+
+  async getTradingAccount(accountId: string): Promise<TradingAccount> {
+    return this.request(`/api/v1/accounts/account/${accountId}`)
+  }
+
+  // Trades
+  async getTrades(accountId: string): Promise<Trade[]> {
+    return this.request(`/api/v1/trades/${accountId}`)
+  }
+
+  async getTrade(tradeId: string): Promise<Trade> {
+    return this.request(`/api/v1/trades/trade/${tradeId}`)
+  }
+
   // Health Check
   async healthCheck(): Promise<{ status: string; service: string }> {
     return this.request('/health')
@@ -109,4 +175,4 @@ class QuantaViewAPI {
 
 export const quantaAPI = new QuantaViewAPI()
 
-export type { PatternInsight, TimeAnalysis, PairAnalysis, HeatmapData }
+export type { PatternInsight, TimeAnalysis, PairAnalysis, HeatmapData, TradingAccount, Trade }
