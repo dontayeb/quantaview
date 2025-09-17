@@ -1,8 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
-import { useAuth } from '@/contexts/AuthContext'
+import { quantaAPI } from '@/lib/api'
+import { useAuth } from '@/contexts/AuthContextRailway'
 import type { Trade, TradingAccount } from '@/lib/supabase'
 import { applyFilters, type TradeFilters } from '@/components/TradeFilters'
 

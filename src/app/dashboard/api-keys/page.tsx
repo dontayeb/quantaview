@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextRailway'
 import { 
   KeyIcon,
   PlusIcon,
@@ -47,7 +47,7 @@ interface ScopePreset {
 
 export default function APIKeysPage() {
   const router = useRouter()
-  const { user, session, loading: authLoading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   
   const [apiKeys, setApiKeys] = useState<APIKey[]>([])
   const [scopes, setScopes] = useState<ScopeInfo[]>([])

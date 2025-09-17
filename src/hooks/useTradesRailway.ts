@@ -3,11 +3,10 @@
 import { useState, useEffect } from 'react'
 import { quantaAPI, type Trade, type TradingAccount } from '@/lib/api'
 import { applyFilters, type TradeFilters } from '@/components/TradeFilters'
-
-// Mock user for now - in real app this would come from auth
-const MOCK_USER_ID = '5190d7da-2172-42d2-bb85-a9056b4a6527'
+import { useAuth } from '@/contexts/AuthContextRailway'
 
 export function useTrades(tradingAccountId?: string) {
+  const { user } = useAuth()
   const [allTrades, setAllTrades] = useState<Trade[]>([])
   const [tradingAccounts, setTradingAccounts] = useState<TradingAccount[]>([])
   const [selectedAccount, setSelectedAccount] = useState<TradingAccount | null>(null)
@@ -36,11 +35,13 @@ export function useTrades(tradingAccountId?: string) {
   // Load trading accounts
   useEffect(() => {
     const loadAccounts = async () => {
+      if (!user) return
+      
       try {
         setLoading(true)
         setError(null)
         
-        const accounts = await quantaAPI.getTradingAccounts(MOCK_USER_ID)
+        const accounts = await quantaAPI.getTradingAccounts(user.id)
         setTradingAccounts(accounts)
         
         // Select account if specified or use first account
@@ -60,7 +61,7 @@ export function useTrades(tradingAccountId?: string) {
     }
 
     loadAccounts()
-  }, [tradingAccountId])
+  }, [user, tradingAccountId])
 
   // Load trades for selected account
   useEffect(() => {
@@ -94,22 +95,33 @@ export function useTrades(tradingAccountId?: string) {
   // Calculate metrics
   const metrics = {
     totalTrades: trades.length,
-    winningTrades: trades.filter(t => t.profit > 0).length,
-    losingTrades: trades.filter(t => t.profit < 0).length,
+    buyTrades: trades.filter(t => t.type === 'buy').length,
+    sellTrades: trades.filter(t => t.type === 'sell').length,
     totalProfit: trades.reduce((sum, t) => sum + t.profit, 0),
     totalCommission: trades.reduce((sum, t) => sum + t.commission, 0),
     totalSwap: trades.reduce((sum, t) => sum + t.swap, 0),
+    winningTrades: trades.filter(t => t.profit > 0).length,
+    losingTrades: trades.filter(t => t.profit < 0).length,
     winRate: trades.length > 0 ? (trades.filter(t => t.profit > 0).length / trades.length) * 100 : 0,
-    averageWin: (() => {
-      const winningTrades = trades.filter(t => t.profit > 0)
-      return winningTrades.length > 0 ? winningTrades.reduce((sum, t) => sum + t.profit, 0) / winningTrades.length : 0
+    profitFactor: (() => {
+      const grossProfit = trades.filter(t => t.profit > 0).reduce((sum, t) => sum + t.profit, 0)
+      const grossLoss = Math.abs(trades.filter(t => t.profit < 0).reduce((sum, t) => sum + t.profit, 0))
+      return grossLoss > 0 ? grossProfit / grossLoss : grossProfit > 0 ? 999 : 0
     })(),
-    averageLoss: (() => {
-      const losingTrades = trades.filter(t => t.profit < 0)
-      return losingTrades.length > 0 ? losingTrades.reduce((sum, t) => sum + t.profit, 0) / losingTrades.length : 0
-    })(),
+    closedTrades: trades.filter(t => t.close_time).length,
+    averageProfit: trades.length > 0 ? trades.reduce((sum, t) => sum + t.profit, 0) / trades.length : 0,
     largestWin: trades.length > 0 ? Math.max(...trades.map(t => t.profit)) : 0,
     largestLoss: trades.length > 0 ? Math.min(...trades.map(t => t.profit)) : 0,
+    averageRRR: 0, // Simplified for now
+    tradesPerDay: 0, // Simplified for now
+    tradesPerWeek: 0, // Simplified for now
+    tradesPerMonth: 0, // Simplified for now
+    maxDrawdown: 0, // Simplified for now
+    maxDrawdownPercent: 0, // Simplified for now
+    currentDrawdown: 0, // Simplified for now
+    currentDrawdownPercent: 0, // Simplified for now
+    recoveryFactor: 0, // Simplified for now
+    totalBalance: selectedAccount ? selectedAccount.starting_balance + trades.reduce((sum, t) => sum + t.profit, 0) : 0
   }
 
   const selectAccount = (account: TradingAccount) => {
@@ -118,11 +130,11 @@ export function useTrades(tradingAccountId?: string) {
 
   const refetch = async () => {
     // Reload accounts and trades
-    if (selectedAccount) {
+    if (selectedAccount && user) {
       try {
         setLoading(true)
         const [accounts, trades] = await Promise.all([
-          quantaAPI.getTradingAccounts(MOCK_USER_ID),
+          quantaAPI.getTradingAccounts(user.id),
           quantaAPI.getTrades(selectedAccount.id)
         ])
         setTradingAccounts(accounts)

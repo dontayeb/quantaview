@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContextRailway'
+import { quantaAPI } from '@/lib/api'
 import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
@@ -67,102 +68,52 @@ export default function NewAccountPage() {
     }
 
     try {
-      console.log('🔍 Step 1: Checking for existing account...', {
+      console.log('🔍 Step 1: Checking for existing accounts...', {
         user_id: user.id,
         account_number: accountNum
       })
 
-      // Step 1: Check if account already exists
-      const { data: existingAccount, error: checkError } = await supabase
-        .from('trading_accounts')
-        .select('id, account_name, account_number')
-        .eq('user_id', user.id)
-        .eq('account_number', accountNum)
-        .maybeSingle()
-
-      if (checkError) {
-        console.error('❌ Error checking existing account:', checkError)
-        if (checkError.code === '42P01') {
-          setError('Database tables not set up. Please run the database schema first.')
-          return
-        }
-        throw checkError
-      }
-
-      if (existingAccount) {
-        console.log('❌ Account already exists:', existingAccount)
-        setError(`Account #${accountNum} already exists (${existingAccount.account_name}). Each account number can only be added once.`)
+      // Step 1: Get all accounts for the user to check for duplicates
+      const existingAccounts = await quantaAPI.getTradingAccounts(user.id)
+      
+      const duplicateAccount = existingAccounts.find(acc => acc.account_number === accountNum)
+      if (duplicateAccount) {
+        console.log('❌ Account already exists:', duplicateAccount)
+        setError(`Account #${accountNum} already exists (${duplicateAccount.account_name}). Each account number can only be added once.`)
         return
       }
 
       console.log('✅ Account number is available')
-      console.log('🔍 Step 2: Inserting new account...')
+      console.log('🔍 Step 2: Creating new account...')
 
-      // Step 2: Insert new account with timeout protection
-      const insertPromise = supabase
-        .from('trading_accounts')
-        .insert({
-          user_id: user.id,
-          account_number: accountNum,
-          account_name: formData.account_name.trim(),
-          password: formData.password,
-          server: formData.server.trim(),
-          broker: formData.broker?.trim() || null,
-          currency: formData.currency,
-          account_type: formData.account_type,
-          starting_balance: startingBalance,
-          is_active: true
-        })
-        .select()
-        .single()
+      // Step 2: Create new account
+      const newAccount = await quantaAPI.createTradingAccount({
+        user_id: user.id,
+        account_number: accountNum,
+        account_name: formData.account_name.trim(),
+        password: formData.password,
+        server: formData.server.trim(),
+        broker: formData.broker?.trim() || undefined,
+        currency: formData.currency,
+        account_type: formData.account_type,
+        starting_balance: startingBalance
+      })
 
-      const timeoutPromise = new Promise<never>((_, reject) => 
-        setTimeout(() => reject(new Error('Request timeout - operation took too long (10s)')), 10000)
-      )
-
-      const result = await Promise.race([insertPromise, timeoutPromise])
-      const { data, error } = result
-      console.log('✅ Supabase insert response:', { data, error })
-
-      if (error) {
-        console.error('❌ Insert error:', error)
-        
-        // Handle specific error codes
-        switch (error.code) {
-          case '23505':
-            if (error.message.includes('account_number')) {
-              setError('This account number is already registered. Please use a different account number.')
-            } else {
-              setError('This account already exists with these details.')
-            }
-            break
-          case '23503':
-            setError('Invalid user session. Please logout and login again.')
-            break
-          case '42P01':
-            setError('Database tables not set up properly. Please contact support.')
-            break
-          case '23514':
-            setError('Invalid account data. Please check all fields are filled correctly.')
-            break
-          default:
-            setError(`Database error (${error.code}): ${error.message}`)
-        }
-      } else if (data) {
-        console.log('🎉 Account created successfully:', data)
-        router.push('/dashboard?success=account_added')
-      } else {
-        setError('Account was created but no data returned. Please refresh the page.')
-      }
+      console.log('🎉 Account created successfully:', newAccount)
+      router.push('/dashboard?success=account_added')
 
     } catch (err) {
       console.error('❌ Unexpected error:', err)
       
       if (err instanceof Error) {
-        if (err.message.includes('timeout')) {
-          setError('The request took too long to complete. Please check your internet connection and try again.')
-        } else if (err.message.includes('fetch')) {
+        if (err.message.includes('fetch') || err.message.includes('NetworkError')) {
           setError('Network error. Please check your internet connection.')
+        } else if (err.message.includes('Account #') && err.message.includes('already exists')) {
+          setError(err.message) // Use the exact duplicate error message
+        } else if (err.message.includes('401') || err.message.includes('Unauthorized')) {
+          setError('Session expired. Please log out and log in again.')
+        } else if (err.message.includes('400') || err.message.includes('Bad Request')) {
+          setError('Invalid account data. Please check all required fields.')
         } else {
           setError(`Error: ${err.message}`)
         }

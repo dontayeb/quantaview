@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth } from '@/contexts/AuthContextRailway'
 import { AccountManager } from '@/components/AccountManager'
 import { useTrades } from '@/hooks/useTrades'
 import { ArrowLeftIcon, PlusIcon } from '@heroicons/react/24/outline'

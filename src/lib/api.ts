@@ -162,6 +162,23 @@ class QuantaViewAPI {
     return this.request(`/api/v1/accounts/account/${accountId}`)
   }
 
+  async createTradingAccount(account: {
+    user_id: string
+    account_number: number
+    account_name: string
+    password: string
+    server: string
+    broker?: string
+    currency: string
+    account_type?: string
+    starting_balance: number
+  }): Promise<TradingAccount> {
+    return this.request('/api/v1/accounts/', {
+      method: 'POST',
+      body: JSON.stringify(account)
+    })
+  }
+
   // Trades
   async getTrades(accountId: string): Promise<Trade[]> {
     return this.request(`/api/v1/trades/${accountId}`)
