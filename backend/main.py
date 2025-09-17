@@ -18,18 +18,36 @@ app = FastAPI(
 # Configure CORS - support both local and production origins
 FRONTEND_URL = os.getenv("FRONTEND_URL", "http://localhost:3000")
 ENVIRONMENT = os.getenv("ENVIRONMENT", "development")
+CORS_ORIGINS = os.getenv("CORS_ORIGINS", "")
 
-if ENVIRONMENT == "production":
-    allowed_origins = [FRONTEND_URL]
+# Parse CORS origins from environment variable or use defaults
+if CORS_ORIGINS:
+    try:
+        import json
+        allowed_origins = json.loads(CORS_ORIGINS)
+    except:
+        # Fallback if JSON parsing fails
+        allowed_origins = CORS_ORIGINS.split(",")
+elif ENVIRONMENT == "production":
+    # Allow all origins for Railway deployment debugging
+    # TODO: Replace with specific Railway URLs once known
+    allowed_origins = ["*"]
 else:
-    allowed_origins = ["http://localhost:3000", "http://localhost:3001"]
+    # Development origins
+    allowed_origins = [
+        "http://localhost:3000", 
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001"
+    ]
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allow_headers=["Content-Type", "Authorization", "*"],
+    allow_headers=["Content-Type", "Authorization", "X-Requested-With", "*"],
+    expose_headers=["*"]
 )
 
 # Try to include routers with database connection, fallback to basic endpoints
