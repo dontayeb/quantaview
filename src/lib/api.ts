@@ -94,12 +94,16 @@ class QuantaViewAPI {
     this.baseUrl = baseUrl
   }
 
-  private async request<T>(endpoint: string): Promise<T> {
+  private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+    
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       headers: {
-        'Authorization': 'Bearer test_token',
+        'Authorization': token ? `Bearer ${token}` : 'Bearer test_token',
         'Content-Type': 'application/json',
+        ...options?.headers,
       },
+      ...options,
     })
     
     if (!response.ok) {
@@ -165,6 +169,68 @@ class QuantaViewAPI {
 
   async getTrade(tradeId: string): Promise<Trade> {
     return this.request(`/api/v1/trades/trade/${tradeId}`)
+  }
+
+  // Authentication
+  async register(email: string, password: string, fullName?: string): Promise<{
+    access_token: string
+    token_type: string
+    user: {
+      id: string
+      email: string
+      full_name?: string
+      is_active: boolean
+    }
+  }> {
+    return this.request('/api/v1/auth/register', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password,
+        full_name: fullName
+      })
+    })
+  }
+
+  async login(email: string, password: string): Promise<{
+    access_token: string
+    token_type: string
+    user: {
+      id: string
+      email: string
+      full_name?: string
+      is_active: boolean
+    }
+  }> {
+    return this.request('/api/v1/auth/login', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email,
+        password
+      })
+    })
+  }
+
+  async getCurrentUser(): Promise<{
+    id: string
+    email: string
+    full_name?: string
+    is_active: boolean
+    created_at: string
+  }> {
+    return this.request('/api/v1/auth/me')
+  }
+
+  async logout(): Promise<{ message: string }> {
+    return this.request('/api/v1/auth/logout', {
+      method: 'POST'
+    })
   }
 
   // Health Check

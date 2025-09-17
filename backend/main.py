@@ -35,8 +35,9 @@ app.add_middleware(
 # Try to include routers with database connection, fallback to basic endpoints
 try:
     from database import get_db
-    from routers import trades, accounts, analytics, api_keys, algorithms
+    from routers import trades, accounts, analytics, api_keys, algorithms, auth
     
+    app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
     app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
