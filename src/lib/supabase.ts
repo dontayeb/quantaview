@@ -1,9 +1,5 @@
-import { createClient } from '@supabase/supabase-js'
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co'
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key'
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+// Legacy Supabase types for compatibility during Railway migration
+// This file provides stub types to prevent build failures
 
 export interface TradingAccount {
   id: string
@@ -49,31 +45,26 @@ export interface Trade {
   close_price?: number
   stop_loss?: number
   take_profit?: number
+  profit: number
   commission: number
   swap: number
-  profit: number
   comment?: string
   created_at: string
   updated_at: string
 }
 
-// Legacy interface for backward compatibility
-export interface Deal {
-  id: string
-  trading_account_id: string
-  deal_id: number
-  time: string
-  symbol: string
-  type: string
-  direction: string
-  volume: number
-  price: number
-  order_id?: number
-  commission: number
-  fee: number
-  swap: number
-  profit: number
-  balance?: number
-  comment: string
-  created_at: string
+// Stub supabase client - not functional, just prevents import errors
+export const supabase = {
+  from: () => ({
+    select: () => ({ data: [], error: null }),
+    insert: () => ({ data: [], error: null }),
+    update: () => ({ data: [], error: null }),
+    delete: () => ({ data: [], error: null })
+  }),
+  auth: {
+    getUser: () => ({ data: { user: null }, error: null }),
+    signUp: () => ({ data: { user: null }, error: null }),
+    signInWithPassword: () => ({ data: { user: null }, error: null }),
+    signOut: () => ({ error: null })
+  }
 }
