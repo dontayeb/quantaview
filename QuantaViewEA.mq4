@@ -230,6 +230,8 @@ string FormatTradeJSON(ulong ticket) {
     double profit = HistoryOrderGetDouble(ticket, ORDER_PROFIT);
     double commission = HistoryOrderGetDouble(ticket, ORDER_COMMISSION);
     double swap = HistoryOrderGetDouble(ticket, ORDER_SWAP);
+    double stopLoss = HistoryOrderGetDouble(ticket, ORDER_SL);
+    double takeProfit = HistoryOrderGetDouble(ticket, ORDER_TP);
     string comment = HistoryOrderGetString(ticket, ORDER_COMMENT);
     ENUM_ORDER_TYPE orderType = (ENUM_ORDER_TYPE)HistoryOrderGetInteger(ticket, ORDER_TYPE);
     
@@ -264,9 +266,12 @@ string FormatTradeJSON(ulong ticket) {
     string json = StringFormat(
         "{\"ticket\":%d,\"symbol\":\"%s\",\"trade_type\":\"%s\",\"volume\":%.2f," +
         "\"open_time\":\"%sZ\",\"open_price\":%.5f,\"close_time\":\"%sZ\",\"close_price\":%.5f," +
+        "\"stop_loss\":%s,\"take_profit\":%s," +
         "\"profit\":%.2f,\"commission\":%.2f,\"swap\":%.2f,\"comment\":\"%s\"}",
         ticket, symbol, tradeType, volume,
         openTimeStr, openPrice, closeTimeStr, closePrice,
+        (stopLoss > 0 ? DoubleToStr(stopLoss, 5) : "null"),
+        (takeProfit > 0 ? DoubleToStr(takeProfit, 5) : "null"),
         profit, commission, swap, comment
     );
     
