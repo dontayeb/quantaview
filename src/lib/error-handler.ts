@@ -192,7 +192,7 @@ export function getUserFriendlyMessage(error: AppError): string {
     
     case 'VALIDATION_ERROR':
       if (error.details?.fieldErrors) {
-        const fieldErrors = Object.values(error.details.fieldErrors);
+        const fieldErrors = Object.values(error.details.fieldErrors) as string[];
         return fieldErrors.length > 0 ? fieldErrors[0] : 'Please check your input and try again.';
       }
       return 'Please check your input and try again.';
