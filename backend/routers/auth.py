@@ -14,6 +14,7 @@ import os
 from database import get_db
 from models.models import User
 from services.email_service import email_service
+from dependencies import get_current_user
 from utils.error_handlers import (
     APIError,
     AuthenticationError,
@@ -245,40 +246,17 @@ async def login_user(login_data: UserLogin, db: Session = Depends(get_db)):
 
 @router.get("/me", response_model=UserResponse)
 async def get_current_user_info(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    db: Session = Depends(get_db)
+    current_user: User = Depends(get_current_user)
 ):
     """Get current user information"""
     
-    if not credentials:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No authorization header provided"
-        )
-    
-    # Verify token
-    payload = verify_token(credentials.credentials)
-    if not payload:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid token"
-        )
-    
-    # Get user from database
-    user_id = payload.get("sub")
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="User not found"
-        )
-    
     return UserResponse(
-        id=str(user.id),
-        email=user.email,
-        full_name=user.full_name,
-        is_active=user.is_active,
-        created_at=user.created_at
+        id=str(current_user.id),
+        email=current_user.email,
+        full_name=current_user.full_name,
+        is_active=current_user.is_active,
+        is_email_verified=current_user.is_email_verified,
+        created_at=current_user.created_at
     )
 
 @router.post("/verify-email")

@@ -45,12 +45,14 @@ async def get_current_user(
         # Mock user for testing - replace with real JWT verification
         # Create a mock user object that matches the User model
         from uuid import UUID
+        from datetime import datetime
         mock_user = User()
         mock_user.id = UUID("123e4567-e89b-12d3-a456-426614174000")
         mock_user.email = "test@example.com"
         mock_user.full_name = "Test User"
         mock_user.is_active = True
         mock_user.is_email_verified = True
+        mock_user.created_at = datetime.utcnow()
         
         return mock_user
         
