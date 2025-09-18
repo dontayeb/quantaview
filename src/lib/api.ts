@@ -119,6 +119,11 @@ class QuantaViewAPI {
     try {
       const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
       
+      // Debug logging
+      if (typeof window !== 'undefined') {
+        console.log('Sending request with Authorization:', token ? `Bearer ${token.substring(0, 20)}...` : 'Bearer test_token')
+      }
+      
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         headers: {
           'Authorization': token ? `Bearer ${token}` : 'Bearer test_token',
