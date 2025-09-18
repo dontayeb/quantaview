@@ -9,9 +9,11 @@ import jwt
 import hashlib
 import secrets
 import logging
+import os
 
 from database import get_db
 from models.models import User
+from services.email_service import email_service
 from utils.error_handlers import (
     APIError,
     AuthenticationError,
@@ -70,7 +72,11 @@ class UserResponse(BaseModel):
     email: str
     full_name: Optional[str]
     is_active: bool
+    is_email_verified: bool
     created_at: datetime
+
+class EmailVerificationRequest(BaseModel):
+    token: str
 
 # Utility functions
 def hash_password(password: str) -> str:
@@ -102,6 +108,16 @@ def verify_token(token: str) -> dict:
     except jwt.PyJWTError:
         return None
 
+def generate_verification_token() -> str:
+    """Generate a secure verification token"""
+    return secrets.token_urlsafe(32)
+
+def is_verification_token_expired(sent_at: datetime) -> bool:
+    """Check if verification token is expired (24 hours)"""
+    if not sent_at:
+        return True
+    return datetime.utcnow() - sent_at > timedelta(hours=24)
+
 # Authentication endpoints
 @router.post("/register", response_model=Token)
 async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
@@ -116,22 +132,39 @@ async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
                 field_errors={"email": "This email address is already in use"}
             )
         
-        # Hash password
+        # Hash password and generate verification token
         password_hash = hash_password(user_data.password)
+        verification_token = generate_verification_token()
         
-        # Create new user
+        # Create new user (inactive until email verified)
         new_user = User(
             email=user_data.email,
             password_hash=password_hash,
             full_name=user_data.full_name,
-            is_active=True
+            is_active=False,
+            is_email_verified=False,
+            email_verification_token=verification_token,
+            email_verification_sent_at=datetime.utcnow()
         )
         
         db.add(new_user)
         db.commit()
         db.refresh(new_user)
         
-        # Create access token
+        # Send verification email
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        email_sent = await email_service.send_verification_email(
+            email=new_user.email,
+            full_name=new_user.full_name,
+            verification_token=verification_token,
+            frontend_url=frontend_url
+        )
+        
+        if not email_sent:
+            logging.warning(f"Failed to send verification email to {new_user.email}")
+        
+        # For now, return a token even though user isn't verified
+        # In a strict implementation, you might not return a token until verified
         access_token = create_access_token(data={"sub": str(new_user.id), "email": new_user.email})
         
         logging.info(f"User registered successfully: {new_user.email}")
@@ -143,7 +176,8 @@ async def register_user(user_data: UserRegister, db: Session = Depends(get_db)):
                 "id": str(new_user.id),
                 "email": new_user.email,
                 "full_name": new_user.full_name,
-                "is_active": new_user.is_active
+                "is_active": new_user.is_active,
+                "is_email_verified": new_user.is_email_verified
             }
         }
     
@@ -241,6 +275,114 @@ async def get_current_user_info(
         is_active=user.is_active,
         created_at=user.created_at
     )
+
+@router.post("/verify-email")
+async def verify_email(
+    verification_data: EmailVerificationRequest, 
+    db: Session = Depends(get_db)
+):
+    """Verify user's email address"""
+    
+    try:
+        # Find user by verification token
+        user = db.query(User).filter(
+            User.email_verification_token == verification_data.token
+        ).first()
+        
+        if not user:
+            raise AuthenticationError("Invalid verification token")
+        
+        # Check if token is expired
+        if is_verification_token_expired(user.email_verification_sent_at):
+            raise AuthenticationError("Verification token has expired")
+        
+        # Check if already verified
+        if user.is_email_verified:
+            return {"message": "Email already verified"}
+        
+        # Update user as verified
+        user.is_email_verified = True
+        user.is_active = True  # Activate user after email verification
+        user.email_verification_token = None  # Clear the token
+        user.email_verification_sent_at = None
+        user.updated_at = datetime.utcnow()
+        
+        db.commit()
+        db.refresh(user)
+        
+        logging.info(f"Email verified successfully for user: {user.email}")
+        
+        return {
+            "message": "Email verified successfully",
+            "user": {
+                "id": str(user.id),
+                "email": user.email,
+                "full_name": user.full_name,
+                "is_active": user.is_active,
+                "is_email_verified": user.is_email_verified
+            }
+        }
+    
+    except AuthenticationError:
+        raise
+    except SQLAlchemyError as e:
+        log_request_error("verify-email", "POST", e)
+        raise DatabaseError("Email verification failed due to database error")
+    except Exception as e:
+        log_request_error("verify-email", "POST", e)
+        raise APIError("Email verification failed due to an unexpected error")
+
+@router.post("/resend-verification")
+async def resend_verification_email(
+    email_data: dict,
+    db: Session = Depends(get_db)
+):
+    """Resend verification email"""
+    
+    try:
+        email = email_data.get("email")
+        if not email:
+            raise ValidationError("Email is required")
+        
+        # Find user by email
+        user = db.query(User).filter(User.email == email).first()
+        if not user:
+            # Don't reveal if email exists for security
+            return {"message": "If this email is registered, a verification email has been sent"}
+        
+        # Check if already verified
+        if user.is_email_verified:
+            return {"message": "Email is already verified"}
+        
+        # Generate new verification token
+        verification_token = generate_verification_token()
+        user.email_verification_token = verification_token
+        user.email_verification_sent_at = datetime.utcnow()
+        
+        db.commit()
+        
+        # Send verification email
+        frontend_url = os.getenv("FRONTEND_URL", "http://localhost:3000")
+        email_sent = await email_service.send_verification_email(
+            email=user.email,
+            full_name=user.full_name,
+            verification_token=verification_token,
+            frontend_url=frontend_url
+        )
+        
+        if not email_sent:
+            logging.warning(f"Failed to resend verification email to {user.email}")
+        
+        return {"message": "If this email is registered, a verification email has been sent"}
+    
+    except ValidationError:
+        raise
+    except SQLAlchemyError as e:
+        log_request_error("resend-verification", "POST", e)
+        raise DatabaseError("Failed to resend verification email")
+    except Exception as e:
+        log_request_error("resend-verification", "POST", e)
+        raise APIError("Failed to resend verification email")
 
 @router.post("/logout")
 async def logout_user():

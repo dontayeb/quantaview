@@ -344,6 +344,26 @@ class QuantaViewAPI {
     })
   }
 
+  async verifyEmail(token: string): Promise<{ message: string; user?: any }> {
+    return this.request('/api/v1/auth/verify-email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ token })
+    })
+  }
+
+  async resendVerificationEmail(email: string): Promise<{ message: string }> {
+    return this.request('/api/v1/auth/resend-verification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ email })
+    })
+  }
+
   // Health Check
   async healthCheck(): Promise<{ status: string; service: string }> {
     return this.request('/health')
