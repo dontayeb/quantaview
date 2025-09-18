@@ -43,10 +43,14 @@ async def get_current_user(
             )
         
         # Mock user for testing - replace with real JWT verification
-        mock_user = User(
-            id="123e4567-e89b-12d3-a456-426614174000",
-            email="test@example.com"
-        )
+        # Create a mock user object that matches the User model
+        from uuid import UUID
+        mock_user = User()
+        mock_user.id = UUID("123e4567-e89b-12d3-a456-426614174000")
+        mock_user.email = "test@example.com"
+        mock_user.full_name = "Test User"
+        mock_user.is_active = True
+        mock_user.is_email_verified = True
         
         return mock_user
         
@@ -79,10 +83,13 @@ async def get_api_key_user(
         
         # In a real app, you'd look up the API key in the database
         # For now, return a mock user
-        mock_user = User(
-            id="123e4567-e89b-12d3-a456-426614174001",
-            email="api@example.com"
-        )
+        from uuid import UUID
+        mock_user = User()
+        mock_user.id = UUID("123e4567-e89b-12d3-a456-426614174001")
+        mock_user.email = "api@example.com"
+        mock_user.full_name = "API User"
+        mock_user.is_active = True
+        mock_user.is_email_verified = True
         
         return mock_user
         
