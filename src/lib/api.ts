@@ -107,7 +107,13 @@ class QuantaViewAPI {
     const context: ErrorContext = {
       endpoint,
       method: options?.method || 'GET',
-      requestData: options?.body ? JSON.parse(options.body as string) : undefined
+      requestData: options?.body ? (() => {
+        try {
+          return JSON.parse(options.body as string)
+        } catch {
+          return options.body
+        }
+      })() : undefined
     }
 
     try {

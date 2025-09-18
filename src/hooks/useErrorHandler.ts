@@ -36,7 +36,9 @@ export function useErrorHandler(): UseErrorHandlerReturn {
   }, [])
 
   const handleError = useCallback((err: any) => {
-    const appError = isAppError(err) ? err : new AppError(err?.message || 'An unexpected error occurred')
+    const appError = isAppError(err) ? err : new AppError(
+      (err instanceof Error ? err.message : String(err)) || 'An unexpected error occurred'
+    )
     setError(appError)
     logError(appError)
   }, [])
@@ -53,7 +55,9 @@ export function useErrorHandler(): UseErrorHandlerReturn {
       const result = await operation()
       onSuccess?.(result)
     } catch (err) {
-      const appError = isAppError(err) ? err : new AppError(err?.message || 'An unexpected error occurred')
+      const appError = isAppError(err) ? err : new AppError(
+        (err instanceof Error ? err.message : String(err)) || 'An unexpected error occurred'
+      )
       setError(appError)
       logError(appError)
       onError?.(appError)
