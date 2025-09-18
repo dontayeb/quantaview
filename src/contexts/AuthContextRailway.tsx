@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { quantaAPI } from '@/lib/api'
+import { AppError, isAppError, getUserFriendlyMessage } from '@/lib/error-handler'
 
 interface User {
   id: string
@@ -13,9 +14,9 @@ interface User {
 interface AuthContextType {
   user: User | null
   loading: boolean
-  signUp: (email: string, password: string, fullName?: string) => Promise<{ error?: any }>
-  signIn: (email: string, password: string) => Promise<{ error?: any }>
-  signOut: () => Promise<{ error?: any }>
+  signUp: (email: string, password: string, fullName?: string) => Promise<{ error?: { message: string; appError?: AppError } }>
+  signIn: (email: string, password: string) => Promise<{ error?: { message: string; appError?: AppError } }>
+  signOut: () => Promise<{ error?: { message: string; appError?: AppError } }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -51,7 +52,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user)
       return {}
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Registration failed' }
+      if (isAppError(error)) {
+        return { error: { message: getUserFriendlyMessage(error), appError: error } }
+      }
+      return { error: { message: error instanceof Error ? error.message : 'Registration failed' } }
     }
   }
 
@@ -62,7 +66,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(response.user)
       return {}
     } catch (error) {
-      return { error: error instanceof Error ? error.message : 'Login failed' }
+      if (isAppError(error)) {
+        return { error: { message: getUserFriendlyMessage(error), appError: error } }
+      }
+      return { error: { message: error instanceof Error ? error.message : 'Login failed' } }
     }
   }
 
