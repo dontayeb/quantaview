@@ -72,7 +72,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 # Try to include routers with database connection, fallback to basic endpoints
 try:
     from database import get_db
-    from routers import trades, accounts, analytics, api_keys, algorithms, auth, bulk_trades
+    from routers import trades, accounts, analytics, api_keys, algorithms, auth
     
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
@@ -80,7 +80,6 @@ try:
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
     app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["api-keys"])
     app.include_router(algorithms.router, prefix="/api/v1/algorithms", tags=["algorithms"])
-    app.include_router(bulk_trades.router, prefix="/api/v1/bulk-trades", tags=["bulk-trades"])
     logging.info("Database connection successful - Full API enabled")
 except Exception as e:
     logging.warning(f"Database connection failed: {e} - Running with basic endpoints only")
