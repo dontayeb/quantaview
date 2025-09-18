@@ -185,7 +185,7 @@ export function getUserFriendlyMessage(error: AppError): string {
       return 'Please check your internet connection and try again.';
     
     case 'AUTHENTICATION_ERROR':
-      return 'Please check your credentials and try again.';
+      return error.message || 'Please check your credentials and try again.';
     
     case 'AUTHORIZATION_ERROR':
       return 'You don\'t have permission to perform this action.';
