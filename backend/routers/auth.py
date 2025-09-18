@@ -208,6 +208,11 @@ async def login_user(login_data: UserLogin, db: Session = Depends(get_db)):
             log_request_error("login", "POST", Exception("Invalid password"), user_id=str(user.id))
             raise AuthenticationError("Invalid email or password")
         
+        # Check email verification status first
+        if not user.is_email_verified:
+            log_request_error("login", "POST", Exception("Email not verified"), user_id=str(user.id))
+            raise AuthenticationError("Please verify your email address before signing in. Check your email for a verification link.")
+        
         # Check if user is active
         if not user.is_active:
             log_request_error("login", "POST", Exception("Inactive account"), user_id=str(user.id))
