@@ -239,8 +239,6 @@ class QuantaViewAPI {
     user_id: string
     account_number: number
     account_name: string
-    password: string
-    server: string
     broker?: string
     currency: string
     account_type?: string

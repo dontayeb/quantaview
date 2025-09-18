@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContextRailway'
 import { quantaAPI } from '@/lib/api'
-import { ArrowLeftIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline'
+import { ArrowLeftIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
 export default function NewAccountPage() {
@@ -19,12 +19,9 @@ export default function NewAccountPage() {
   }
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
   const [formData, setFormData] = useState({
     account_name: '',
     account_number: '',
-    password: '',
-    server: '',
     broker: '',
     currency: 'USD',
     account_type: 'demo',
@@ -56,16 +53,6 @@ export default function NewAccountPage() {
       setLoading(false)
       return
     }
-    if (!formData.password.trim()) {
-      setError('Account password is required')
-      setLoading(false)
-      return
-    }
-    if (!formData.server.trim()) {
-      setError('Server is required')
-      setLoading(false)
-      return
-    }
 
     try {
       console.log('🔍 Step 1: Checking for existing accounts...', {
@@ -91,8 +78,6 @@ export default function NewAccountPage() {
         user_id: user.id,
         account_number: accountNum,
         account_name: formData.account_name.trim(),
-        password: formData.password,
-        server: formData.server.trim(),
         broker: formData.broker?.trim() || undefined,
         currency: formData.currency,
         account_type: formData.account_type,
@@ -150,7 +135,7 @@ export default function NewAccountPage() {
           <div className="px-6 py-4 border-b border-gray-200">
             <h1 className="text-lg font-medium text-gray-900">Add Trading Account</h1>
             <p className="mt-1 text-sm text-gray-600">
-              Add a new trading account to import and track your trades
+              Add your trading account details. Use the account number to match trades from your EA.
             </p>
           </div>
 
@@ -198,52 +183,6 @@ export default function NewAccountPage() {
               </div>
             </div>
 
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                Account Password *
-              </label>
-              <div className="mt-1 relative">
-                <input
-                  type={showPassword ? 'text' : 'password'}
-                  name="password"
-                  id="password"
-                  required
-                  value={formData.password}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 pr-10 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="Account password"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                  onClick={() => setShowPassword(!showPassword)}
-                >
-                  {showPassword ? (
-                    <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                  ) : (
-                    <EyeIcon className="h-5 w-5 text-gray-400" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label htmlFor="server" className="block text-sm font-medium text-gray-700">
-                Server *
-              </label>
-              <div className="mt-1">
-                <input
-                  type="text"
-                  name="server"
-                  id="server"
-                  required
-                  value={formData.server}
-                  onChange={handleChange}
-                  className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  placeholder="e.g., FTMO-Server2"
-                />
-              </div>
-            </div>
 
             <div>
               <label htmlFor="broker" className="block text-sm font-medium text-gray-700">
@@ -349,9 +288,9 @@ export default function NewAccountPage() {
           <h3 className="text-sm font-medium text-blue-800 mb-2">Next Steps:</h3>
           <ol className="text-sm text-blue-700 space-y-1">
             <li>1. Add your trading account details above</li>
-            <li>2. Export your trading history as XLSX from MT5</li>
-            <li>3. Use the updated importer to import your deals</li>
-            <li>4. View your performance on the dashboard!</li>
+            <li>2. Generate an API key in the API Keys section</li>
+            <li>3. Configure QuantaViewEA.mq4 with your API key and account ID</li>
+            <li>4. Attach the EA to MT4 to automatically sync all trades!</li>
           </ol>
         </div>
       </div>
