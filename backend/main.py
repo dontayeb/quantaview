@@ -1,8 +1,20 @@
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.exceptions import RequestValidationError
+from sqlalchemy.exc import SQLAlchemyError
 import os
 from dotenv import load_dotenv
 import logging
+
+# Import error handlers
+from utils.error_handlers import (
+    APIError,
+    api_error_handler,
+    http_exception_handler,
+    validation_exception_handler,
+    database_exception_handler,
+    general_exception_handler
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -49,6 +61,13 @@ app.add_middleware(
     allow_headers=["Content-Type", "Authorization", "X-Requested-With", "*"],
     expose_headers=["*"]
 )
+
+# Add error handlers
+app.add_exception_handler(APIError, api_error_handler)
+app.add_exception_handler(HTTPException, http_exception_handler)
+app.add_exception_handler(RequestValidationError, validation_exception_handler)
+app.add_exception_handler(SQLAlchemyError, database_exception_handler)
+app.add_exception_handler(Exception, general_exception_handler)
 
 # Try to include routers with database connection, fallback to basic endpoints
 try:

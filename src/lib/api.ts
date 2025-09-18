@@ -1,6 +1,15 @@
 /**
- * FastAPI backend client for AI analytics
+ * FastAPI backend client for AI analytics with comprehensive error handling
  */
+
+import { 
+  AppError, 
+  parseAPIError, 
+  withRetry, 
+  logError, 
+  ErrorContext,
+  NetworkError 
+} from './error-handler'
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
 
@@ -95,46 +104,104 @@ class QuantaViewAPI {
   }
 
   private async request<T>(endpoint: string, options?: RequestInit): Promise<T> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
-    
-    const response = await fetch(`${this.baseUrl}${endpoint}`, {
-      headers: {
-        'Authorization': token ? `Bearer ${token}` : 'Bearer test_token',
-        'Content-Type': 'application/json',
-        ...options?.headers,
-      },
-      ...options,
-    })
-    
-    if (!response.ok) {
-      throw new Error(`API request failed: ${response.status} ${response.statusText}`)
+    const context: ErrorContext = {
+      endpoint,
+      method: options?.method || 'GET',
+      requestData: options?.body ? JSON.parse(options.body as string) : undefined
     }
-    
-    return response.json()
+
+    try {
+      const token = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+      
+      const response = await fetch(`${this.baseUrl}${endpoint}`, {
+        headers: {
+          'Authorization': token ? `Bearer ${token}` : 'Bearer test_token',
+          'Content-Type': 'application/json',
+          ...options?.headers,
+        },
+        ...options,
+      })
+      
+      // Handle successful responses
+      if (response.ok) {
+        try {
+          return await response.json()
+        } catch (parseError) {
+          throw new AppError('Invalid JSON response from server', 'PARSE_ERROR', 500, undefined, context)
+        }
+      }
+      
+      // Handle error responses
+      let errorData: any
+      try {
+        errorData = await response.json()
+      } catch {
+        // If response body is not JSON, create error from status
+        const error = parseAPIError(response, context)
+        logError(error)
+        throw error
+      }
+      
+      const error = parseAPIError(errorData, context)
+      logError(error)
+      throw error
+      
+    } catch (error) {
+      // Handle network errors
+      if (error instanceof TypeError && error.message.includes('fetch')) {
+        const networkError = new NetworkError('Unable to connect to server', context)
+        logError(networkError)
+        throw networkError
+      }
+      
+      // Re-throw AppErrors as-is
+      if (error instanceof AppError) {
+        throw error
+      }
+      
+      // Handle other errors
+      const appError = parseAPIError(error, context)
+      logError(appError)
+      throw appError
+    }
+  }
+
+  private async requestWithRetry<T>(endpoint: string, options?: RequestInit): Promise<T> {
+    const context: ErrorContext = {
+      endpoint,
+      method: options?.method || 'GET'
+    }
+
+    return withRetry(
+      () => this.request<T>(endpoint, options),
+      3, // maxRetries
+      1000, // delay
+      context
+    )
   }
 
   // AI Insights (from Railway database)
   async getTradingInsights(accountId: string): Promise<PatternInsight[]> {
-    return this.request(`/api/v1/analytics/insights/${accountId}`)
+    return this.requestWithRetry(`/api/v1/analytics/insights/${accountId}`)
   }
 
   // Time Analysis
   async getTimeAnalysis(accountId: string): Promise<TimeAnalysis[]> {
-    return this.request(`/api/v1/analytics/time-analysis/${accountId}`)
+    return this.requestWithRetry(`/api/v1/analytics/time-analysis/${accountId}`)
   }
 
   // Pair Analysis
   async getPairAnalysis(accountId: string): Promise<PairAnalysis[]> {
-    return this.request(`/api/v1/analytics/pair-analysis/${accountId}`)
+    return this.requestWithRetry(`/api/v1/analytics/pair-analysis/${accountId}`)
   }
 
   // Heatmaps
   async getHourlyHeatmap(accountId: string): Promise<HeatmapData> {
-    return this.request(`/api/v1/analytics/heatmap/hourly/${accountId}`)
+    return this.requestWithRetry(`/api/v1/analytics/heatmap/hourly/${accountId}`)
   }
 
   async getDailyHeatmap(accountId: string): Promise<HeatmapData> {
-    return this.request(`/api/v1/analytics/heatmap/daily/${accountId}`)
+    return this.requestWithRetry(`/api/v1/analytics/heatmap/daily/${accountId}`)
   }
 
   // Lot Size Analysis
