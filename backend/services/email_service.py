@@ -50,7 +50,7 @@ class EmailService:
             
             # Send email using Resend
             params = {
-                "from": "QuantaView <noreply@quantaview.com>",  # You'll need to set up domain
+                "from": "QuantaView <onboarding@resend.dev>",  # Using Resend's verified domain
                 "to": [email],
                 "subject": subject,
                 "html": html_content,
