@@ -13,7 +13,7 @@
 // Input parameters
 input string QuantaViewAPIKey = "qv_your_api_key_here";        // Your QuantaView API Key
 input string TradingAccountID = "your-account-id-here";        // Your Trading Account ID
-input string APIBaseURL = "https://api.quantaview.com";        // API Base URL
+input string APIBaseURL = "https://grateful-mindfulness-production-868e.up.railway.app";        // API Base URL
 input bool EnableHistoricalSync = true;                        // Enable historical trade sync
 input bool EnableRealTimeSync = true;                          // Enable real-time trade sync
 input int BatchSize = 100;                                     // Trades per batch
@@ -342,7 +342,7 @@ void SendTradeToQuantaView(ulong ticket) {
 //+------------------------------------------------------------------+
 bool CheckWebRequestPermissions() {
     // This is a simple test to see if WebRequest is properly configured
-    string testUrl = "https://api.quantaview.com/health";
+    string testUrl = APIBaseURL + "/health";
     char data[];
     char result[];
     string resultStr;
@@ -353,7 +353,7 @@ bool CheckWebRequestPermissions() {
         Print("❌ WebRequest failed - please check your MT4 settings:");
         Print("   1. Go to Tools → Options → Expert Advisors");
         Print("   2. Check 'Allow WebRequest for following URLs'");
-        Print("   3. Add: https://api.quantaview.com");
+        Print("   3. Add: ", APIBaseURL);
         Print("   4. Restart MT4 and try again");
         return false;
     }
@@ -375,7 +375,7 @@ void ShowSetupInstructions() {
     Print("3. Enable WebRequest in MT4:");
     Print("   - Tools → Options → Expert Advisors");
     Print("   - Check 'Allow WebRequest for following URLs'");
-    Print("   - Add: https://api.quantaview.com");
+    Print("   - Add: ", APIBaseURL);
     Print("4. Enable Auto Trading (green button in toolbar)");
     Print("=========================================");
 }
