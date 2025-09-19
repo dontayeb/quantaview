@@ -115,13 +115,21 @@ export default function APIKeysPage() {
   }
 
   const handleCreateApiKey = async () => {
+    console.log('Starting API key creation...')
     try {
+      console.log('Form data:', {
+        name: keyName,
+        scopes: selectedScopes,
+        expires_in_days: expiresInDays
+      })
+      
       const newKey = await quantaAPI.createApiKey({
         name: keyName,
         scopes: selectedScopes,
         expires_in_days: expiresInDays
       })
       
+      console.log('API key created successfully:', newKey)
       setNewApiKey(newKey)
       setShowCreateModal(false)
       fetchApiKeys()
@@ -133,6 +141,7 @@ export default function APIKeysPage() {
       setExpiresInDays(365)
     } catch (error) {
       console.error('Error creating API key:', error)
+      alert(`Failed to create API key: ${error}`)
     }
   }
 

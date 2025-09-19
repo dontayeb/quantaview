@@ -387,10 +387,18 @@ class QuantaViewAPI {
     trading_account_id?: string
     expires_in_days?: number
   }): Promise<any> {
-    return this.request('/api/v1/api-keys', {
-      method: 'POST',
-      body: JSON.stringify(keyData)
-    })
+    console.log('Creating API key with data:', keyData)
+    try {
+      const result = await this.request('/api/v1/api-keys', {
+        method: 'POST',
+        body: JSON.stringify(keyData)
+      })
+      console.log('API key creation successful:', result)
+      return result
+    } catch (error) {
+      console.error('API key creation failed:', error)
+      throw error
+    }
   }
 
   async revokeApiKey(keyId: string): Promise<{ message: string }> {
