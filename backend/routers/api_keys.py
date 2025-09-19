@@ -58,7 +58,7 @@ async def list_api_keys(
                 id=str(key.id),
                 name=key.name,
                 key_prefix=key.key_prefix,
-                scopes=json.loads(key.scopes),
+                scopes=key.scopes.split(",") if key.scopes else [],
                 trading_account_id=str(key.trading_account_id) if key.trading_account_id else None,
                 is_active=key.is_active,
                 last_used_at=key.last_used_at,
@@ -127,12 +127,14 @@ async def create_api_key(
         if key_data.expires_in_days:
             expires_at = datetime.utcnow() + timedelta(days=key_data.expires_in_days)
         
-        # Create API key record
+        # Create API key record  
+        # Store scopes as comma-separated string instead of JSON to match database schema
+        scopes_str = ",".join(key_data.scopes)
         new_api_key = APIKey(
             name=key_data.name,
             key_hash=key_hash,
             key_prefix=key_prefix,
-            scopes=json.dumps(key_data.scopes),
+            scopes=scopes_str,
             user_id=current_user.id,
             trading_account_id=key_data.trading_account_id,
             expires_at=expires_at
@@ -150,7 +152,7 @@ async def create_api_key(
             id=str(new_api_key.id),
             name=new_api_key.name,
             key_prefix=new_api_key.key_prefix,
-            scopes=json.loads(new_api_key.scopes),
+            scopes=new_api_key.scopes.split(",") if new_api_key.scopes else [],
             trading_account_id=str(new_api_key.trading_account_id) if new_api_key.trading_account_id else None,
             is_active=new_api_key.is_active,
             last_used_at=new_api_key.last_used_at,
