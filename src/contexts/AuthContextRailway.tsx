@@ -62,7 +62,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signIn = async (email: string, password: string) => {
     try {
       const response = await quantaAPI.login(email, password)
+      console.log('Login response received, access_token:', response.access_token ? `${response.access_token.substring(0, 20)}...` : 'undefined')
       localStorage.setItem('access_token', response.access_token)
+      console.log('Token stored in localStorage:', localStorage.getItem('access_token') ? `${localStorage.getItem('access_token')!.substring(0, 20)}...` : 'null')
       setUser(response.user)
       return {}
     } catch (error) {
