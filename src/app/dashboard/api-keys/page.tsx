@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { useAuth } from '@/contexts/AuthContextRailway'
+import { quantaAPI } from '@/lib/api'
 import { 
   KeyIcon,
   PlusIcon,
@@ -79,15 +80,8 @@ export default function APIKeysPage() {
 
   const fetchApiKeys = async () => {
     try {
-      const response = await fetch('/api/v1/api-keys', {
-        headers: {
-          'Authorization': `Bearer test_token`
-        }
-      })
-      if (response.ok) {
-        const data = await response.json()
-        setApiKeys(data)
-      }
+      const data = await quantaAPI.getApiKeys()
+      setApiKeys(data)
     } catch (error) {
       console.error('Error fetching API keys:', error)
     } finally {
@@ -97,11 +91,8 @@ export default function APIKeysPage() {
 
   const fetchScopes = async () => {
     try {
-      const response = await fetch('/api/v1/api-keys/scopes')
-      if (response.ok) {
-        const data = await response.json()
-        setScopes(data)
-      }
+      const data = await quantaAPI.getApiKeyScopes()
+      setScopes(data)
     } catch (error) {
       console.error('Error fetching scopes:', error)
     }
@@ -109,11 +100,8 @@ export default function APIKeysPage() {
 
   const fetchPresets = async () => {
     try {
-      const response = await fetch('/api/v1/api-keys/presets')
-      if (response.ok) {
-        const data = await response.json()
-        setPresets(data)
-      }
+      const data = await quantaAPI.getApiKeyPresets()
+      setPresets(data)
     } catch (error) {
       console.error('Error fetching presets:', error)
     }
@@ -128,32 +116,21 @@ export default function APIKeysPage() {
 
   const handleCreateApiKey = async () => {
     try {
-      console.log("Sending request with Authorization: Bearer test_token");
-      const response = await fetch('/api/v1/api-keys', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer test_token`
-        },
-        body: JSON.stringify({
-          name: keyName,
-          scopes: selectedScopes,
-          expires_in_days: expiresInDays
-        })
+      const newKey = await quantaAPI.createApiKey({
+        name: keyName,
+        scopes: selectedScopes,
+        expires_in_days: expiresInDays
       })
-
-      if (response.ok) {
-        const newKey = await response.json()
-        setNewApiKey(newKey)
-        setShowCreateModal(false)
-        fetchApiKeys()
-        
-        // Reset form
-        setKeyName('')
-        setSelectedScopes([])
-        setSelectedPreset('')
-        setExpiresInDays(365)
-      }
+      
+      setNewApiKey(newKey)
+      setShowCreateModal(false)
+      fetchApiKeys()
+      
+      // Reset form
+      setKeyName('')
+      setSelectedScopes([])
+      setSelectedPreset('')
+      setExpiresInDays(365)
     } catch (error) {
       console.error('Error creating API key:', error)
     }
@@ -165,16 +142,8 @@ export default function APIKeysPage() {
     }
 
     try {
-      const response = await fetch(`/api/v1/api-keys/${keyId}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer test_token`
-        }
-      })
-
-      if (response.ok) {
-        fetchApiKeys()
-      }
+      await quantaAPI.revokeApiKey(keyId)
+      fetchApiKeys()
     } catch (error) {
       console.error('Error revoking API key:', error)
     }

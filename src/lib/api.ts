@@ -375,6 +375,37 @@ class QuantaViewAPI {
   async healthCheck(): Promise<{ status: string; service: string }> {
     return this.request('/health')
   }
+
+  // API Keys
+  async getApiKeys(): Promise<any[]> {
+    return this.requestWithRetry('/api/v1/api-keys')
+  }
+
+  async createApiKey(keyData: {
+    name: string
+    scopes: string[]
+    trading_account_id?: string
+    expires_in_days?: number
+  }): Promise<any> {
+    return this.request('/api/v1/api-keys', {
+      method: 'POST',
+      body: JSON.stringify(keyData)
+    })
+  }
+
+  async revokeApiKey(keyId: string): Promise<{ message: string }> {
+    return this.request(`/api/v1/api-keys/${keyId}`, {
+      method: 'DELETE'
+    })
+  }
+
+  async getApiKeyScopes(): Promise<any[]> {
+    return this.request('/api/v1/api-keys/scopes')
+  }
+
+  async getApiKeyPresets(): Promise<any> {
+    return this.request('/api/v1/api-keys/presets')
+  }
 }
 
 export const quantaAPI = new QuantaViewAPI()
