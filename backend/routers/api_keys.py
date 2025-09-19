@@ -58,7 +58,7 @@ async def list_api_keys(
                 id=str(key.id),
                 name=key.name,
                 key_prefix=key.key_prefix,
-                scopes=key.scopes.split(",") if key.scopes else [],
+                scopes=key.scopes.strip("{}").split(",") if key.scopes else [],
                 trading_account_id=str(key.trading_account_id) if key.trading_account_id else None,
                 is_active=key.is_active,
                 last_used_at=key.last_used_at,
@@ -128,13 +128,13 @@ async def create_api_key(
             expires_at = datetime.utcnow() + timedelta(days=key_data.expires_in_days)
         
         # Create API key record  
-        # Store scopes as comma-separated string instead of JSON to match database schema
-        scopes_str = ",".join(key_data.scopes)
+        # Store scopes as PostgreSQL array format {value1,value2,value3}
+        scopes_array = "{" + ",".join(key_data.scopes) + "}"
         new_api_key = APIKey(
             name=key_data.name,
             key_hash=key_hash,
             key_prefix=key_prefix,
-            scopes=scopes_str,
+            scopes=scopes_array,
             user_id=current_user.id,
             trading_account_id=key_data.trading_account_id,
             expires_at=expires_at
@@ -152,7 +152,7 @@ async def create_api_key(
             id=str(new_api_key.id),
             name=new_api_key.name,
             key_prefix=new_api_key.key_prefix,
-            scopes=new_api_key.scopes.split(",") if new_api_key.scopes else [],
+            scopes=new_api_key.scopes.strip("{}").split(",") if new_api_key.scopes else [],
             trading_account_id=str(new_api_key.trading_account_id) if new_api_key.trading_account_id else None,
             is_active=new_api_key.is_active,
             last_used_at=new_api_key.last_used_at,
