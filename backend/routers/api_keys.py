@@ -69,6 +69,10 @@ async def list_api_keys(
     except Exception as e:
         # For mock users or database issues, return empty list
         print(f"API keys query failed: {e}")
+        print(f"Error type: {type(e)}")
+        print(f"Current user ID: {current_user.id}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
         return []
 
 @router.post("/", response_model=APIKeyWithSecret)
@@ -155,6 +159,10 @@ async def create_api_key(
         raise
     except Exception as e:
         print(f"API key creation error: {e}")
+        print(f"Error type: {type(e)}")
+        print(f"Current user ID: {current_user.id}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
         # For mock users, create a simple mock API key
         api_key, key_hash, key_prefix = APIKeyGenerator.generate_api_key()
         from datetime import datetime
