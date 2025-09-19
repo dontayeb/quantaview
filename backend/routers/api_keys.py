@@ -47,9 +47,11 @@ async def list_api_keys(
 ):
     """List all API keys for the current user"""
     try:
+        print(f"Querying API keys for user: {current_user.id}")
         api_keys = db.query(APIKey).filter(
             APIKey.user_id == current_user.id
         ).order_by(APIKey.created_at.desc()).all()
+        print(f"Found {len(api_keys)} API keys in database")
         
         return [
             APIKeyResponse(
@@ -136,9 +138,12 @@ async def create_api_key(
             expires_at=expires_at
         )
         
+        print(f"About to save API key to database: {new_api_key.name}")
         db.add(new_api_key)
         db.commit()
+        print(f"API key committed to database, ID: {new_api_key.id}")
         db.refresh(new_api_key)
+        print(f"API key refreshed from database: {new_api_key.name}")
         
         # Return with the actual API key (only time it's exposed)
         return APIKeyWithSecret(
