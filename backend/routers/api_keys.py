@@ -165,7 +165,6 @@ async def create_api_key(
         print(f"Full traceback: {traceback.format_exc()}")
         # For mock users, create a simple mock API key
         api_key, key_hash, key_prefix = APIKeyGenerator.generate_api_key()
-        from datetime import datetime
         from uuid import uuid4
         
         return APIKeyWithSecret(
