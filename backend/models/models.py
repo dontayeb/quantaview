@@ -28,7 +28,7 @@ class TradingAccount(Base):
     __tablename__ = "trading_accounts"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), nullable=False)
     account_name = Column(String, nullable=False)
     account_number = Column(Integer, nullable=True)
     password = Column(String, nullable=False, default="placeholder")
