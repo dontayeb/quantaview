@@ -38,7 +38,7 @@ class TradingAccountBase(BaseModel):
     account_name: str
     account_number: Optional[int] = None
     password: str = "placeholder"
-    server: Optional[str] = None
+    server: str = "Unknown"
     broker: Optional[str] = None
     account_type: Optional[str] = None
     currency: str = "USD"

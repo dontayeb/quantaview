@@ -32,7 +32,7 @@ class TradingAccount(Base):
     account_name = Column(String, nullable=False)
     account_number = Column(Integer, nullable=True)
     password = Column(String, nullable=False, default="placeholder")
-    server = Column(String, nullable=True)
+    server = Column(String, nullable=False, default="Unknown")
     broker = Column(String, nullable=True)
     account_type = Column(String, nullable=True)  # demo, live
     currency = Column(String, default="USD")
