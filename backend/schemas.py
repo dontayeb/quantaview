@@ -36,7 +36,7 @@ class Trade(TradeBase):
 # Trading Account schemas
 class TradingAccountBase(BaseModel):
     account_name: str
-    account_number: Optional[str] = None
+    account_number: Optional[int] = None
     broker: Optional[str] = None
     account_type: Optional[str] = None
     currency: str = "USD"

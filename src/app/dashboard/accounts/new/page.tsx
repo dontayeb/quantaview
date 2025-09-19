@@ -74,6 +74,16 @@ export default function NewAccountPage() {
       console.log('🔍 Step 2: Creating new account...')
 
       // Step 2: Create new account
+      console.log('📤 Sending account data:', {
+        user_id: user.id,
+        account_number: accountNum,
+        account_name: formData.account_name.trim(),
+        broker: formData.broker?.trim() || undefined,
+        currency: formData.currency,
+        account_type: formData.account_type,
+        starting_balance: startingBalance
+      })
+      
       const newAccount = await quantaAPI.createTradingAccount({
         user_id: user.id,
         account_number: accountNum,
