@@ -90,52 +90,52 @@ async def create_api_key(
         
         # Validate trading account ownership if specified
         if key_data.trading_account_id:
-        trading_account = db.query(TradingAccount).filter(
-            TradingAccount.id == key_data.trading_account_id,
-            TradingAccount.user_id == current_user.id
-        ).first()
+            trading_account = db.query(TradingAccount).filter(
+                TradingAccount.id == key_data.trading_account_id,
+                TradingAccount.user_id == current_user.id
+            ).first()
+            
+            if not trading_account:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Trading account not found"
+                )
         
-        if not trading_account:
+        # Check user doesn't have too many keys (limit to 10)
+        existing_count = db.query(APIKey).filter(
+            APIKey.user_id == current_user.id,
+            APIKey.is_active == True
+        ).count()
+        
+        if existing_count >= 10:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Trading account not found"
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Maximum of 10 active API keys allowed"
             )
-    
-    # Check user doesn't have too many keys (limit to 10)
-    existing_count = db.query(APIKey).filter(
-        APIKey.user_id == current_user.id,
-        APIKey.is_active == True
-    ).count()
-    
-    if existing_count >= 10:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Maximum of 10 active API keys allowed"
+        
+        # Generate API key
+        api_key, key_hash, key_prefix = APIKeyGenerator.generate_api_key()
+        
+        # Set expiration
+        expires_at = None
+        if key_data.expires_in_days:
+            expires_at = datetime.utcnow() + timedelta(days=key_data.expires_in_days)
+        
+        # Create API key record
+        new_api_key = APIKey(
+            name=key_data.name,
+            key_hash=key_hash,
+            key_prefix=key_prefix,
+            scopes=json.dumps(key_data.scopes),
+            user_id=current_user.id,
+            trading_account_id=key_data.trading_account_id,
+            expires_at=expires_at
         )
-    
-    # Generate API key
-    api_key, key_hash, key_prefix = APIKeyGenerator.generate_api_key()
-    
-    # Set expiration
-    expires_at = None
-    if key_data.expires_in_days:
-        expires_at = datetime.utcnow() + timedelta(days=key_data.expires_in_days)
-    
-    # Create API key record
-    new_api_key = APIKey(
-        name=key_data.name,
-        key_hash=key_hash,
-        key_prefix=key_prefix,
-        scopes=json.dumps(key_data.scopes),
-        user_id=current_user.id,
-        trading_account_id=key_data.trading_account_id,
-        expires_at=expires_at
-    )
-    
-    db.add(new_api_key)
-    db.commit()
-    db.refresh(new_api_key)
-    
+        
+        db.add(new_api_key)
+        db.commit()
+        db.refresh(new_api_key)
+        
         # Return with the actual API key (only time it's exposed)
         return APIKeyWithSecret(
             id=str(new_api_key.id),

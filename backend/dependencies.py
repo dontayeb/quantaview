@@ -32,6 +32,8 @@ async def get_current_user(
         
         # Debug logging
         print(f"Received token: {token[:20]}..." if token else "No token received")
+        if token == "test_token":
+            print("WARNING: Received test_token instead of real JWT token")
         
         # Check if token is valid (for debugging, accept any non-empty token)
         if not token or token.strip() == "":

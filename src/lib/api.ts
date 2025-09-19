@@ -121,7 +121,11 @@ class QuantaViewAPI {
       
       // Debug logging
       if (typeof window !== 'undefined') {
+        console.log('Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'null')
         console.log('Sending request with Authorization:', token ? `Bearer ${token.substring(0, 20)}...` : 'Bearer test_token')
+        if (!token) {
+          console.log('No token found in localStorage, using test_token fallback')
+        }
       }
       
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
