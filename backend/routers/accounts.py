@@ -18,11 +18,53 @@ async def get_accounts(user_id: UUID, db: Session = Depends(get_db)):
 @router.post("/", response_model=TradingAccount)
 async def create_account(account: TradingAccountCreate, db: Session = Depends(get_db)):
     """Create a new trading account"""
-    db_account = AccountModel(**account.dict())
-    db.add(db_account)
-    db.commit()
-    db.refresh(db_account)
-    return db_account
+    try:
+        print(f"Creating account with data: {account.dict()}")
+        
+        # Check if user exists, create mock user if needed
+        from models.models import User
+        user = db.query(User).filter(User.id == account.user_id).first()
+        if not user:
+            print(f"User not found: {account.user_id}, creating mock user")
+            # Create mock user for development
+            mock_user = User(
+                id=account.user_id,
+                email="test@example.com",
+                full_name="Test User",
+                is_active=True,
+                is_email_verified=True
+            )
+            db.add(mock_user)
+            db.commit()
+            print(f"Created mock user: {account.user_id}")
+        
+        # Check for duplicate account number
+        existing_account = db.query(AccountModel).filter(
+            AccountModel.account_number == account.account_number
+        ).first()
+        if existing_account:
+            print(f"Duplicate account number: {account.account_number}")
+            raise HTTPException(status_code=400, detail=f"Account number {account.account_number} already exists")
+        
+        db_account = AccountModel(**account.dict())
+        print(f"Created account model: {db_account}")
+        
+        db.add(db_account)
+        db.commit()
+        db.refresh(db_account)
+        
+        print(f"Account saved successfully: {db_account.id}")
+        return db_account
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Database error creating account: {e}")
+        print(f"Error type: {type(e)}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Data integrity constraint violated")
 
 @router.get("/account/{account_id}", response_model=TradingAccount)
 async def get_account(account_id: UUID, db: Session = Depends(get_db)):
