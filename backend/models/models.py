@@ -30,7 +30,9 @@ class TradingAccount(Base):
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
     user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
     account_name = Column(String, nullable=False)
-    account_number = Column(String, nullable=True)
+    account_number = Column(Integer, nullable=True)
+    password = Column(String, nullable=False, default="placeholder")
+    server = Column(String, nullable=True)
     broker = Column(String, nullable=True)
     account_type = Column(String, nullable=True)  # demo, live
     currency = Column(String, default="USD")
