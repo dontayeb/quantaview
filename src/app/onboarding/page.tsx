@@ -52,6 +52,18 @@ function OnboardingContent() {
   })
   const [createdApiKey, setCreatedApiKey] = useState<APIKey & { key?: string } | null>(null)
 
+  // Debug account state changes
+  useEffect(() => {
+    console.log('Created account state changed:', createdAccount)
+    if (createdAccount) {
+      console.log('Account details:', {
+        id: createdAccount.id,
+        name: createdAccount.account_name,
+        number: createdAccount.account_number
+      })
+    }
+  }, [createdAccount])
+
   const createTradingAccount = async () => {
     try {
       setIsLoading(true)
@@ -81,6 +93,7 @@ function OnboardingContent() {
       }
       
       const account = await quantaAPI.createTradingAccount(accountPayload)
+      console.log('Account created successfully:', account)
       setCreatedAccount(account)
       
       // Auto-generate API key name
@@ -89,9 +102,18 @@ function OnboardingContent() {
         name: `${accountData.account_name} Integration`
       }))
       
+      console.log('Moving to API key tab with account:', account.id)
       setCurrentTab('api-key')
     } catch (error) {
       console.error('Failed to create trading account:', error)
+      
+      // Check if it's an authentication error
+      if (error instanceof Error && error.message.includes('401')) {
+        alert('Session expired. Please log in again.')
+        router.push('/login?redirect=/onboarding')
+        return
+      }
+      
       alert('Failed to create trading account. Please try again.')
     } finally {
       setIsLoading(false)
@@ -102,12 +124,23 @@ function OnboardingContent() {
     try {
       setIsLoading(true)
       
+      if (!createdAccount) {
+        alert('No trading account found. Please create an account first.')
+        setCurrentTab('account')
+        return
+      }
+
+      console.log('Creating API key for account:', createdAccount.id)
+      
       const keyPayload = {
         ...apiKeyData,
-        trading_account_id: createdAccount?.id
+        trading_account_id: createdAccount.id
       }
       
+      console.log('API key payload:', keyPayload)
+      
       const apiKey = await quantaAPI.createApiKey(keyPayload)
+      console.log('API key created successfully:', apiKey)
       setCreatedApiKey(apiKey)
       setCurrentTab('download')
     } catch (error) {
