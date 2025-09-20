@@ -113,3 +113,24 @@ async def delete_account(account_id: UUID, db: Session = Depends(get_db)):
     db.delete(account)
     db.commit()
     return {"message": "Account deleted successfully"}
+
+@router.delete("/admin/delete-all")
+async def delete_all_accounts(db: Session = Depends(get_db)):
+    """Admin endpoint to delete all trading accounts - USE WITH CAUTION"""
+    try:
+        # Get count before deletion
+        count = db.query(AccountModel).count()
+        print(f"Deleting {count} trading accounts...")
+        
+        # Delete all trading accounts
+        db.query(AccountModel).delete()
+        db.commit()
+        
+        return {
+            "message": f"Successfully deleted {count} trading accounts", 
+            "deleted_count": count
+        }
+    except Exception as e:
+        print(f"Error deleting accounts: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete accounts")
