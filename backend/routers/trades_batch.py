@@ -7,7 +7,6 @@ import uuid
 
 from database import get_db
 from models import Trade as TradeModel
-from utils.api_key_utils import verify_api_key
 
 router = APIRouter()
 
@@ -31,8 +30,7 @@ class TradeBatchRequest(BaseModel):
 @router.post("/batch")
 async def receive_trade_batch(
     batch: TradeBatchRequest, 
-    db: Session = Depends(get_db),
-    api_key_data: dict = Depends(verify_api_key)
+    db: Session = Depends(get_db)
 ):
     """
     Receive a batch of trades from MT5 EA

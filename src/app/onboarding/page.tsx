@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircleIcon, ArrowRightIcon, KeyIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'
 import { quantaAPI, TradingAccount } from '@/lib/api'
@@ -14,9 +14,21 @@ interface APIKey {
   created_at: string
 }
 
-export default function OnboardingPage() {
-  const router = useRouter()
+function SearchParamsHandler({ onStepChange }: { onStepChange: (step: string) => void }) {
   const searchParams = useSearchParams()
+  
+  useEffect(() => {
+    const step = searchParams.get('step')
+    if (step) {
+      onStepChange(step)
+    }
+  }, [searchParams, onStepChange])
+  
+  return null
+}
+
+function OnboardingContent() {
+  const router = useRouter()
   const [currentTab, setCurrentTab] = useState('account')
   const [isLoading, setIsLoading] = useState(false)
   
@@ -39,14 +51,6 @@ export default function OnboardingPage() {
     scopes: ['trades:write', 'account:read', 'analytics:read']
   })
   const [createdApiKey, setCreatedApiKey] = useState<APIKey & { key?: string } | null>(null)
-
-  // Check if user is coming from a specific step
-  useEffect(() => {
-    const step = searchParams.get('step')
-    if (step) {
-      setCurrentTab(step)
-    }
-  }, [searchParams])
 
   const createTradingAccount = async () => {
     try {
@@ -111,8 +115,15 @@ export default function OnboardingPage() {
     setAccountData(prev => ({ ...prev, [field]: value }))
   }
 
+  const handleStepChange = (step: string) => {
+    setCurrentTab(step)
+  }
+
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      <Suspense fallback={null}>
+        <SearchParamsHandler onStepChange={handleStepChange} />
+      </Suspense>
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
@@ -334,4 +345,8 @@ export default function OnboardingPage() {
       </div>
     </div>
   )
+}
+
+export default function OnboardingPage() {
+  return <OnboardingContent />
 }

@@ -126,3 +126,8 @@ class RateLimiter:
 
 # Global rate limiter instance
 rate_limiter = RateLimiter()
+
+# Standalone function for backward compatibility
+def verify_api_key(provided_key: str, stored_hash: str) -> bool:
+    """Verify an API key against stored hash - standalone wrapper"""
+    return APIKeyGenerator.verify_api_key(provided_key, stored_hash)

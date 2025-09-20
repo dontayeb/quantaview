@@ -9,7 +9,6 @@ from uuid import UUID
 from database import get_db
 from models.models import TradingAccount
 from models.api_key import APIKey
-from utils.api_key_utils import verify_api_key
 
 router = APIRouter()
 
