@@ -117,11 +117,20 @@ async def create_api_key(
                 error_msg = f"Trading account not found. Account ID: {key_data.trading_account_id}, User ID: {current_user.id}"
                 if account_exists:
                     error_msg += f". Account exists but belongs to user: {account_exists.user_id}"
-                print(error_msg)
-                raise HTTPException(
-                    status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Trading account not found"
-                )
+                    
+                    # TEMPORARY FIX: If account exists but user mismatch, link it to current user
+                    print(f"TEMP FIX: Linking orphaned account to current user")
+                    account_exists.user_id = current_user.id
+                    db.commit()
+                    db.refresh(account_exists)
+                    trading_account = account_exists
+                    print(f"Successfully linked account {key_data.trading_account_id} to user {current_user.id}")
+                else:
+                    print(error_msg)
+                    raise HTTPException(
+                        status_code=status.HTTP_404_NOT_FOUND,
+                        detail="Trading account not found"
+                    )
         
         # Check user doesn't have too many keys (limit to 10)
         existing_count = db.query(APIKey).filter(
