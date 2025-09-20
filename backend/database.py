@@ -12,37 +12,6 @@ DATABASE_URL = os.getenv(
     "postgresql://postgres:password@localhost/quantaview"
 )
 
-# Ensure SSL is configured in the URL for Railway
-if "switchyard.proxy.rlwy.net" in DATABASE_URL and "sslmode" not in DATABASE_URL:
-    separator = "&" if "?" in DATABASE_URL else "?"
-    DATABASE_URL = f"{DATABASE_URL}{separator}sslmode=require"
-
-# Configure SSL for Railway PostgreSQL
-connect_args = {
-    "connect_timeout": 30,
-    "application_name": "quantaview-api",
-    "options": "-c statement_timeout=30000"
-}
-
-# Add SSL configuration for Railway PostgreSQL if not localhost
-if "localhost" not in DATABASE_URL and "127.0.0.1" not in DATABASE_URL:
-    # Try different SSL configurations for Railway
-    if "switchyard.proxy.rlwy.net" in DATABASE_URL:
-        # Railway-specific SSL configuration
-        connect_args.update({
-            "sslmode": "prefer",
-            "sslcert": None,
-            "sslkey": None,
-            "sslrootcert": None
-        })
-    else:
-        connect_args.update({
-            "sslmode": "require",
-            "sslcert": None,
-            "sslkey": None,
-            "sslrootcert": None
-        })
-
 # Create SQLAlchemy engine with connection pooling and retry logic
 engine = create_engine(
     DATABASE_URL,
@@ -50,7 +19,11 @@ engine = create_engine(
     pool_recycle=300,
     pool_size=3,
     max_overflow=7,
-    connect_args=connect_args
+    connect_args={
+        "connect_timeout": 30,
+        "application_name": "quantaview-api",
+        "options": "-c statement_timeout=30000"
+    }
 )
 
 # Create SessionLocal class
