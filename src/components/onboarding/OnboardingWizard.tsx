@@ -49,7 +49,7 @@ export default function OnboardingWizard({
       const instructions = await quantaAPI.get<{
         steps: OnboardingStep[]
         troubleshooting: Record<string, string>
-      }>(`/ea/setup-instructions/${accountId}`)
+      }>(`/api/v1/ea/setup-instructions/${accountId}`)
       console.log('Setup instructions fetched successfully:', instructions)
       setSetupInstructions(instructions)
     } catch (error) {
