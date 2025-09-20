@@ -19,8 +19,8 @@ class TradingAlgorithm(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    user = relationship("User", back_populates="algorithms")
+    # Relationships - disabled due to table mismatch
+    # user = relationship("User", back_populates="algorithms")
     # Note: trades relationship handled via magic_number matching in queries
     
     # Ensure unique magic number per user
