@@ -134,3 +134,26 @@ async def delete_all_accounts(db: Session = Depends(get_db)):
         print(f"Error deleting accounts: {e}")
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete accounts")
+
+@router.get("/admin/check-account/{account_number}")
+async def check_account_number(account_number: int, db: Session = Depends(get_db)):
+    """Admin endpoint to check if an account number exists"""
+    try:
+        account = db.query(AccountModel).filter(
+            AccountModel.account_number == account_number
+        ).first()
+        
+        if account:
+            return {
+                "exists": True,
+                "account_id": str(account.id),
+                "account_name": account.account_name,
+                "user_id": str(account.user_id) if account.user_id else None,
+                "created_at": str(account.created_at)
+            }
+        else:
+            return {"exists": False}
+            
+    except Exception as e:
+        print(f"Error checking account: {e}")
+        raise HTTPException(status_code=500, detail="Failed to check account")
