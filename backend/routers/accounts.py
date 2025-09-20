@@ -29,18 +29,27 @@ async def create_account(account: TradingAccountCreate, db: Session = Depends(ge
         user_exists = result.fetchone()
         
         if not user_exists:
-            print(f"User not found in user_profiles: {account.user_id}, creating mock user")
-            # Create mock user in user_profiles table (minimal fields)
-            db.execute(text("""
-                INSERT INTO user_profiles (id, email, full_name, created_at, updated_at) 
-                VALUES (:user_id, :email, :full_name, NOW(), NOW())
-            """), {
-                "user_id": account.user_id,
-                "email": "test@example.com", 
-                "full_name": "Test User"
-            })
-            db.commit()
-            print(f"Created mock user in user_profiles: {account.user_id}")
+            print(f"User not found in user_profiles: {account.user_id}, looking up from users table")
+            
+            # Get actual user data from users table
+            user_result = db.execute(text("SELECT email, full_name FROM users WHERE id = :user_id"), {"user_id": account.user_id})
+            user_data = user_result.fetchone()
+            
+            if user_data:
+                # Create user_profile entry with actual user data
+                db.execute(text("""
+                    INSERT INTO user_profiles (id, email, full_name, created_at, updated_at) 
+                    VALUES (:user_id, :email, :full_name, NOW(), NOW())
+                """), {
+                    "user_id": account.user_id,
+                    "email": user_data.email,
+                    "full_name": user_data.full_name or "User"
+                })
+                db.commit()
+                print(f"Created user_profile from users table: {account.user_id}")
+            else:
+                print(f"User {account.user_id} not found in users table either")
+                raise HTTPException(status_code=400, detail="User not found")
         
         # Check for duplicate account number
         existing_account = db.query(AccountModel).filter(
