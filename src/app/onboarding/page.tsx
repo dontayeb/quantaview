@@ -79,7 +79,7 @@ export default function OnboardingPage() {
         user_id: userId
       }
       
-      const account = await quantaAPI.post('/accounts/', accountPayload)
+      const account = await quantaAPI.createTradingAccount(accountPayload)
       setCreatedAccount(account)
       
       // Auto-generate API key name
@@ -106,7 +106,7 @@ export default function OnboardingPage() {
         trading_account_id: createdAccount?.id
       }
       
-      const apiKey = await quantaAPI.post('/api-keys/', keyPayload)
+      const apiKey = await quantaAPI.createApiKey(keyPayload)
       setCreatedApiKey(apiKey)
       setCurrentTab('download')
     } catch (error) {

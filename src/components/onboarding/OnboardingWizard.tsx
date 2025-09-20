@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { CheckCircleIcon, CloudArrowDownIcon, ExternalLinkIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/react/24/outline'
+import { CheckCircleIcon, CloudArrowDownIcon, ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { quantaAPI } from '@/lib/api'
 
 interface OnboardingStep {
@@ -190,7 +190,7 @@ export default function OnboardingWizard({
                       disabled={completedSteps.has(2)}
                       className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                     >
-                      <ExternalLinkIcon className="w-4 h-4 mr-2" />
+                      <ArrowTopRightOnSquareIcon className="w-4 h-4 mr-2" />
                       I've Added the URL
                     </button>
                     <div className="text-xs text-gray-500">

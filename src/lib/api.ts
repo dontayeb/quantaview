@@ -195,6 +195,11 @@ class QuantaViewAPI {
     )
   }
 
+  // Generic methods
+  async get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint)
+  }
+
   // AI Insights (from Railway database)
   async getTradingInsights(accountId: string): Promise<PatternInsight[]> {
     return this.requestWithRetry(`/api/v1/analytics/insights/${accountId}`)
