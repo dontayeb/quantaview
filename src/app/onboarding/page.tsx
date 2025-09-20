@@ -12,6 +12,7 @@ interface APIKey {
   key_prefix: string
   scopes: string[]
   created_at: string
+  api_key?: string
 }
 
 function SearchParamsHandler({ onStepChange }: { onStepChange: (step: string) => void }) {
@@ -50,7 +51,7 @@ function OnboardingContent() {
     name: '',
     scopes: ['trades:write', 'account:read', 'analytics:read']
   })
-  const [createdApiKey, setCreatedApiKey] = useState<APIKey & { key?: string } | null>(null)
+  const [createdApiKey, setCreatedApiKey] = useState<APIKey | null>(null)
 
   // Debug account state changes
   useEffect(() => {
@@ -374,7 +375,7 @@ function OnboardingContent() {
           {currentTab === 'download' && createdAccount && createdApiKey && (
             <OnboardingWizard
               accountId={createdAccount.id}
-              apiKey={createdApiKey.key || ''}
+              apiKey={createdApiKey.api_key || ''}
               accountName={createdAccount.account_name}
               onComplete={() => {
                 router.push('/dashboard?welcome=true')
