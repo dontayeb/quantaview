@@ -67,9 +67,16 @@ function OnboardingContent() {
       const payload = JSON.parse(atob(token.split('.')[1]))
       const userId = payload.sub
       
+      // Validate account number
+      const accountNumber = parseInt(accountData.account_number)
+      if (!accountNumber || isNaN(accountNumber)) {
+        alert('Please enter a valid account number')
+        return
+      }
+
       const accountPayload = {
         ...accountData,
-        account_number: parseInt(accountData.account_number),
+        account_number: accountNumber,
         user_id: userId
       }
       

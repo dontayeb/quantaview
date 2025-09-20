@@ -36,7 +36,7 @@ class Trade(TradeBase):
 # Trading Account schemas
 class TradingAccountBase(BaseModel):
     account_name: str
-    account_number: Optional[int] = None
+    account_number: int
     password: str = "placeholder"
     server: str = "Unknown"
     broker: Optional[str] = None
