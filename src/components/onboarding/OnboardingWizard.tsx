@@ -1,10 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { CheckCircle2, Download, ExternalLink, AlertCircle, Play } from 'lucide-react'
+import { CheckCircleIcon, CloudArrowDownIcon, ExternalLinkIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { quantaAPI } from '@/lib/api'
 
 interface OnboardingStep {
@@ -92,201 +89,190 @@ export default function OnboardingWizard({
   }
 
   if (!setupInstructions) {
-    return <div>Loading setup instructions...</div>
+    return <div className="text-center py-8">Loading setup instructions...</div>
   }
 
   return (
-    <div className="max-w-4xl mx-auto p-6 space-y-6">
+    <div className="max-w-4xl mx-auto space-y-6">
       {/* Header */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Play className="w-6 h-6 text-blue-600" />
-            MT5 Integration Setup
-          </CardTitle>
-          <p className="text-gray-600">
-            Get your {accountName} account connected to QuantaView in 5 simple steps
-          </p>
-        </CardHeader>
-      </Card>
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-2 mb-2">
+          <PlayIcon className="w-6 h-6 text-blue-600" />
+          <h2 className="text-xl font-semibold text-gray-900">MT5 Integration Setup</h2>
+        </div>
+        <p className="text-gray-600">
+          Get your {accountName} account connected to QuantaView in 5 simple steps
+        </p>
+      </div>
 
       {/* Progress Bar */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center justify-between mb-4">
-            {[1, 2, 3, 4, 5].map((step) => (
-              <div key={step} className="flex items-center">
-                <div className={`
-                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
-                  ${completedSteps.has(step) 
-                    ? 'bg-green-100 text-green-700 border-2 border-green-200' 
-                    : step === currentStep
-                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
-                    : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
-                  }
-                `}>
-                  {completedSteps.has(step) ? (
-                    <CheckCircle2 className="w-5 h-5" />
-                  ) : (
-                    step
-                  )}
-                </div>
-                {step < 5 && (
-                  <div className={`
-                    w-16 h-1 mx-2
-                    ${completedSteps.has(step) ? 'bg-green-200' : 'bg-gray-200'}
-                  `} />
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center justify-between mb-4">
+          {[1, 2, 3, 4, 5].map((step) => (
+            <div key={step} className="flex items-center">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
+                ${completedSteps.has(step) 
+                  ? 'bg-green-100 text-green-700 border-2 border-green-200' 
+                  : step === currentStep
+                  ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
+                  : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                }
+              `}>
+                {completedSteps.has(step) ? (
+                  <CheckCircleIcon className="w-5 h-5" />
+                ) : (
+                  step
                 )}
               </div>
-            ))}
-          </div>
-          <div className="text-center text-sm text-gray-600">
-            Step {currentStep} of 5 • {completedSteps.size}/5 completed
-          </div>
-        </CardContent>
-      </Card>
+              {step < 5 && (
+                <div className={`
+                  w-16 h-1 mx-2
+                  ${completedSteps.has(step) ? 'bg-green-200' : 'bg-gray-200'}
+                `} />
+              )}
+            </div>
+          ))}
+        </div>
+        <div className="text-center text-sm text-gray-600">
+          Step {currentStep} of 5 • {completedSteps.size}/5 completed
+        </div>
+      </div>
 
       {/* Steps */}
       <div className="space-y-4">
         {setupInstructions.steps.map((step, index) => (
-          <Card key={step.step} className={`
+          <div key={step.step} className={`
+            bg-white rounded-lg shadow p-6
             ${step.step === currentStep ? 'ring-2 ring-blue-200 border-blue-200' : ''}
             ${completedSteps.has(step.step) ? 'bg-green-50 border-green-200' : ''}
           `}>
-            <CardContent className="pt-6">
-              <div className="flex items-start gap-4">
-                <div className={`
-                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0
-                  ${completedSteps.has(step.step) 
-                    ? 'bg-green-100 text-green-700' 
-                    : step.step === currentStep
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-500'
-                  }
-                `}>
-                  {completedSteps.has(step.step) ? (
-                    <CheckCircle2 className="w-4 h-4" />
-                  ) : (
-                    step.step
-                  )}
-                </div>
-                
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
-                  <p className="text-gray-600 mb-4">{step.description}</p>
-                  <p className="text-sm text-gray-800 mb-4 bg-gray-50 p-3 rounded">
-                    <strong>Action:</strong> {step.action}
-                  </p>
-                  
-                  {/* Step-specific actions */}
-                  {step.step === 1 && (
-                    <Button 
-                      onClick={downloadEA}
-                      disabled={isDownloading || completedSteps.has(1)}
-                      className="w-full sm:w-auto"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      {isDownloading ? 'Preparing Download...' : 'Download Your EA'}
-                    </Button>
-                  )}
-                  
-                  {step.step === 2 && (
-                    <div className="space-y-2">
-                      <Button 
-                        variant="outline"
-                        onClick={openMT5Settings}
-                        disabled={completedSteps.has(2)}
-                        className="w-full sm:w-auto"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        I've Added the URL
-                      </Button>
-                      <div className="text-xs text-gray-500">
-                        Add this URL: <code className="bg-gray-100 px-2 py-1 rounded">
-                          https://grateful-mindfulness-production-868e.up.railway.app
-                        </code>
-                      </div>
-                    </div>
-                  )}
-                  
-                  {step.step === 3 && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => markStepCompleted(3)}
-                      disabled={completedSteps.has(3)}
-                      className="w-full sm:w-auto"
-                    >
-                      EA Installed & Compiled
-                    </Button>
-                  )}
-                  
-                  {step.step === 4 && (
-                    <Button 
-                      variant="outline"
-                      onClick={() => markStepCompleted(4)}
-                      disabled={completedSteps.has(4)}
-                      className="w-full sm:w-auto"
-                    >
-                      EA Attached to Chart
-                    </Button>
-                  )}
-                  
-                  {step.step === 5 && (
-                    <Button 
-                      onClick={finishOnboarding}
-                      disabled={completedSteps.has(5)}
-                      className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
-                    >
-                      <CheckCircle2 className="w-4 h-4 mr-2" />
-                      Complete Setup
-                    </Button>
-                  )}
-                </div>
+            <div className="flex items-start gap-4">
+              <div className={`
+                w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0
+                ${completedSteps.has(step.step) 
+                  ? 'bg-green-100 text-green-700' 
+                  : step.step === currentStep
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-500'
+                }
+              `}>
+                {completedSteps.has(step.step) ? (
+                  <CheckCircleIcon className="w-4 h-4" />
+                ) : (
+                  step.step
+                )}
               </div>
-            </CardContent>
-          </Card>
+              
+              <div className="flex-1">
+                <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
+                <p className="text-gray-600 mb-4">{step.description}</p>
+                <p className="text-sm text-gray-800 mb-4 bg-gray-50 p-3 rounded">
+                  <strong>Action:</strong> {step.action}
+                </p>
+                
+                {/* Step-specific actions */}
+                {step.step === 1 && (
+                  <button 
+                    onClick={downloadEA}
+                    disabled={isDownloading || completedSteps.has(1)}
+                    className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    <CloudArrowDownIcon className="w-4 h-4 mr-2" />
+                    {isDownloading ? 'Preparing Download...' : 'Download Your EA'}
+                  </button>
+                )}
+                
+                {step.step === 2 && (
+                  <div className="space-y-2">
+                    <button 
+                      onClick={openMT5Settings}
+                      disabled={completedSteps.has(2)}
+                      className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      <ExternalLinkIcon className="w-4 h-4 mr-2" />
+                      I've Added the URL
+                    </button>
+                    <div className="text-xs text-gray-500">
+                      Add this URL: <code className="bg-gray-100 px-2 py-1 rounded">
+                        https://grateful-mindfulness-production-868e.up.railway.app
+                      </code>
+                    </div>
+                  </div>
+                )}
+                
+                {step.step === 3 && (
+                  <button 
+                    onClick={() => markStepCompleted(3)}
+                    disabled={completedSteps.has(3)}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    EA Installed & Compiled
+                  </button>
+                )}
+                
+                {step.step === 4 && (
+                  <button 
+                    onClick={() => markStepCompleted(4)}
+                    disabled={completedSteps.has(4)}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    EA Attached to Chart
+                  </button>
+                )}
+                
+                {step.step === 5 && (
+                  <button 
+                    onClick={finishOnboarding}
+                    disabled={completedSteps.has(5)}
+                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                  >
+                    <CheckCircleIcon className="w-4 h-4 mr-2" />
+                    Complete Setup
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         ))}
       </div>
 
       {/* Troubleshooting */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <AlertCircle className="w-5 h-5 text-amber-600" />
-            Common Issues
-          </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {Object.entries(setupInstructions.troubleshooting).map(([issue, solution]) => (
-              <div key={issue} className="p-3 bg-amber-50 border border-amber-200 rounded">
-                <div className="font-medium text-amber-800 capitalize">
-                  {issue.replace('_', ' ')}: 
-                </div>
-                <div className="text-amber-700">{solution}</div>
+      <div className="bg-white rounded-lg shadow p-6">
+        <div className="flex items-center gap-2 mb-4">
+          <ExclamationTriangleIcon className="w-5 h-5 text-amber-600" />
+          <h3 className="text-lg font-semibold text-gray-900">Common Issues</h3>
+        </div>
+        <div className="space-y-3">
+          {Object.entries(setupInstructions.troubleshooting).map(([issue, solution]) => (
+            <div key={issue} className="p-3 bg-amber-50 border border-amber-200 rounded">
+              <div className="font-medium text-amber-800 capitalize">
+                {issue.replace('_', ' ')}: 
               </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+              <div className="text-amber-700">{solution}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* Success State */}
       {completedSteps.size === 5 && (
-        <Card className="bg-green-50 border-green-200">
-          <CardContent className="pt-6 text-center">
-            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-green-800 mb-2">
-              🎉 Setup Complete!
-            </h3>
-            <p className="text-green-700 mb-4">
-              Your {accountName} account is now connected to QuantaView. 
-              Your trades will sync automatically.
-            </p>
-            <Button onClick={() => window.location.href = '/dashboard'}>
-              Go to Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+          <CheckCircleIcon className="w-16 h-16 text-green-600 mx-auto mb-4" />
+          <h3 className="text-xl font-semibold text-green-800 mb-2">
+            🎉 Setup Complete!
+          </h3>
+          <p className="text-green-700 mb-4">
+            Your {accountName} account is now connected to QuantaView. 
+            Your trades will sync automatically.
+          </p>
+          <button 
+            onClick={() => window.location.href = '/dashboard'}
+            className="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700"
+          >
+            Go to Dashboard
+          </button>
+        </div>
       )}
     </div>
   )

@@ -2,13 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CheckCircle2, ArrowRight, Key, Download } from 'lucide-react'
+import { CheckCircleIcon, ArrowRightIcon, KeyIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'
 import { quantaAPI } from '@/lib/api'
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard'
 
@@ -140,163 +134,179 @@ export default function OnboardingPage() {
           </p>
         </div>
 
-        <Tabs value={currentTab} onValueChange={setCurrentTab} className="space-y-6">
+        <div className="space-y-6">
           {/* Progress Tabs */}
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="account" className="flex items-center gap-2">
-              {createdAccount ? <CheckCircle2 className="w-4 h-4" /> : <span>1</span>}
+          <div className="grid w-full grid-cols-3 bg-gray-100 rounded-lg p-1">
+            <button 
+              onClick={() => setCurrentTab('account')}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium ${
+                currentTab === 'account' ? 'bg-white shadow text-blue-600' : 'text-gray-600 hover:text-gray-900'
+              }`}
+            >
+              {createdAccount ? <CheckCircleIcon className="w-4 h-4" /> : <span>1</span>}
               Trading Account
-            </TabsTrigger>
-            <TabsTrigger value="api-key" disabled={!createdAccount} className="flex items-center gap-2">
-              {createdApiKey ? <CheckCircle2 className="w-4 h-4" /> : <span>2</span>}
+            </button>
+            <button 
+              onClick={() => createdAccount && setCurrentTab('api-key')}
+              disabled={!createdAccount}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium ${
+                currentTab === 'api-key' ? 'bg-white shadow text-blue-600' : 
+                createdAccount ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {createdApiKey ? <CheckCircleIcon className="w-4 h-4" /> : <span>2</span>}
               API Key
-            </TabsTrigger>
-            <TabsTrigger value="download" disabled={!createdApiKey} className="flex items-center gap-2">
+            </button>
+            <button 
+              onClick={() => createdApiKey && setCurrentTab('download')}
+              disabled={!createdApiKey}
+              className={`flex items-center justify-center gap-2 px-4 py-2 rounded-md text-sm font-medium ${
+                currentTab === 'download' ? 'bg-white shadow text-blue-600' : 
+                createdApiKey ? 'text-gray-600 hover:text-gray-900' : 'text-gray-400 cursor-not-allowed'
+              }`}
+            >
               <span>3</span>
               MT5 Setup
-            </TabsTrigger>
-          </TabsList>
+            </button>
+          </div>
 
           {/* Step 1: Create Trading Account */}
-          <TabsContent value="account">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create Your Trading Account</CardTitle>
+          {currentTab === 'account' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Create Your Trading Account</h2>
                 <p className="text-gray-600">
                   Connect your FTMO or other prop trading account to QuantaView
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <div className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="account_name">Account Name</Label>
-                    <Input
+                    <label htmlFor="account_name" className="block text-sm font-medium text-gray-700 mb-1">Account Name</label>
+                    <input
                       id="account_name"
+                      type="text"
                       placeholder="e.g., FTMO Challenge #1"
                       value={accountData.account_name}
                       onChange={(e) => handleAccountInputChange('account_name', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="account_number">MT5 Account Number</Label>
-                    <Input
+                    <label htmlFor="account_number" className="block text-sm font-medium text-gray-700 mb-1">MT5 Account Number</label>
+                    <input
                       id="account_number"
                       type="number"
                       placeholder="e.g., 510266178"
                       value={accountData.account_number}
                       onChange={(e) => handleAccountInputChange('account_number', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                   
                   <div>
-                    <Label htmlFor="broker">Broker</Label>
-                    <Select 
-                      value={accountData.broker} 
-                      onValueChange={(value) => handleAccountInputChange('broker', value)}
+                    <label htmlFor="broker" className="block text-sm font-medium text-gray-700 mb-1">Broker</label>
+                    <select
+                      id="broker"
+                      value={accountData.broker}
+                      onChange={(e) => handleAccountInputChange('broker', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="FTMO">FTMO</SelectItem>
-                        <SelectItem value="MyForexFunds">MyForexFunds</SelectItem>
-                        <SelectItem value="TheForexFunder">The Forex Funder</SelectItem>
-                        <SelectItem value="FundedNext">FundedNext</SelectItem>
-                        <SelectItem value="E8Funding">E8 Funding</SelectItem>
-                        <SelectItem value="Other">Other</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="FTMO">FTMO</option>
+                      <option value="MyForexFunds">MyForexFunds</option>
+                      <option value="TheForexFunder">The Forex Funder</option>
+                      <option value="FundedNext">FundedNext</option>
+                      <option value="E8Funding">E8 Funding</option>
+                      <option value="Other">Other</option>
+                    </select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="account_type">Account Type</Label>
-                    <Select 
-                      value={accountData.account_type} 
-                      onValueChange={(value) => handleAccountInputChange('account_type', value)}
+                    <label htmlFor="account_type" className="block text-sm font-medium text-gray-700 mb-1">Account Type</label>
+                    <select
+                      id="account_type"
+                      value={accountData.account_type}
+                      onChange={(e) => handleAccountInputChange('account_type', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="challenge">Challenge</SelectItem>
-                        <SelectItem value="funded">Funded</SelectItem>
-                        <SelectItem value="demo">Demo</SelectItem>
-                        <SelectItem value="live">Live</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="challenge">Challenge</option>
+                      <option value="funded">Funded</option>
+                      <option value="demo">Demo</option>
+                      <option value="live">Live</option>
+                    </select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="currency">Currency</Label>
-                    <Select 
-                      value={accountData.currency} 
-                      onValueChange={(value) => handleAccountInputChange('currency', value)}
+                    <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-1">Currency</label>
+                    <select
+                      id="currency"
+                      value={accountData.currency}
+                      onChange={(e) => handleAccountInputChange('currency', e.target.value)}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="USD">USD</SelectItem>
-                        <SelectItem value="EUR">EUR</SelectItem>
-                        <SelectItem value="GBP">GBP</SelectItem>
-                      </SelectContent>
-                    </Select>
+                      <option value="USD">USD</option>
+                      <option value="EUR">EUR</option>
+                      <option value="GBP">GBP</option>
+                    </select>
                   </div>
                   
                   <div>
-                    <Label htmlFor="starting_balance">Starting Balance</Label>
-                    <Input
+                    <label htmlFor="starting_balance" className="block text-sm font-medium text-gray-700 mb-1">Starting Balance</label>
+                    <input
                       id="starting_balance"
                       type="number"
                       value={accountData.starting_balance}
                       onChange={(e) => handleAccountInputChange('starting_balance', parseFloat(e.target.value))}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     />
                   </div>
                 </div>
                 
-                <Button 
+                <button 
                   onClick={createTradingAccount}
                   disabled={isLoading || !accountData.account_name || !accountData.account_number}
-                  className="w-full"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
                   {isLoading ? 'Creating Account...' : 'Create Trading Account'}
-                  <ArrowRight className="w-4 h-4 ml-2" />
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                  <ArrowRightIcon className="w-4 h-4 ml-2" />
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Step 2: Create API Key */}
-          <TabsContent value="api-key">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create API Key</CardTitle>
+          {currentTab === 'api-key' && (
+            <div className="bg-white rounded-lg shadow p-6">
+              <div className="mb-6">
+                <h2 className="text-xl font-semibold text-gray-900 mb-2">Create API Key</h2>
                 <p className="text-gray-600">
                   Generate a secure API key for MT5 integration
                 </p>
-              </CardHeader>
-              <CardContent className="space-y-4">
+              </div>
+              <div className="space-y-4">
                 <div>
-                  <Label htmlFor="api_key_name">API Key Name</Label>
-                  <Input
+                  <label htmlFor="api_key_name" className="block text-sm font-medium text-gray-700 mb-1">API Key Name</label>
+                  <input
                     id="api_key_name"
+                    type="text"
                     placeholder="e.g., FTMO Challenge #1 Integration"
                     value={apiKeyData.name}
                     onChange={(e) => setApiKeyData(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
                 
                 <div>
-                  <Label>Permissions</Label>
-                  <div className="mt-2 space-y-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Permissions</label>
+                  <div className="space-y-2">
                     {['trades:write', 'account:read', 'analytics:read'].map((scope) => (
                       <div key={scope} className="flex items-center space-x-2">
                         <input
                           type="checkbox"
                           checked={apiKeyData.scopes.includes(scope)}
                           readOnly
-                          className="rounded"
+                          className="rounded border-gray-300"
                         />
                         <span className="text-sm text-gray-700">{scope}</span>
                       </div>
@@ -307,32 +317,30 @@ export default function OnboardingPage() {
                   </p>
                 </div>
                 
-                <Button 
+                <button 
                   onClick={createAPIKey}
                   disabled={isLoading || !apiKeyData.name}
-                  className="w-full"
+                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
                 >
-                  <Key className="w-4 h-4 mr-2" />
+                  <KeyIcon className="w-4 h-4 mr-2" />
                   {isLoading ? 'Creating API Key...' : 'Create API Key'}
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Step 3: Download & Setup */}
-          <TabsContent value="download">
-            {createdAccount && createdApiKey && (
-              <OnboardingWizard
-                accountId={createdAccount.id}
-                apiKey={createdApiKey.key || ''}
-                accountName={createdAccount.account_name}
-                onComplete={() => {
-                  router.push('/dashboard?welcome=true')
-                }}
-              />
-            )}
-          </TabsContent>
-        </Tabs>
+          {currentTab === 'download' && createdAccount && createdApiKey && (
+            <OnboardingWizard
+              accountId={createdAccount.id}
+              apiKey={createdApiKey.key || ''}
+              accountName={createdAccount.account_name}
+              onComplete={() => {
+                router.push('/dashboard?welcome=true')
+              }}
+            />
+          )}
+        </div>
       </div>
     </div>
   )
