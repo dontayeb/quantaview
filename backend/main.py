@@ -80,6 +80,107 @@ try:
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
     app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["api-keys"])
     app.include_router(algorithms.router, prefix="/api/v1/algorithms", tags=["algorithms"])
+    
+    # Add temporary admin endpoint for database schema inspection
+    @app.get("/admin/schema-inspect")
+    async def schema_inspect(db: Session = Depends(get_db)):
+        """Temporary endpoint to inspect database schema"""
+        from sqlalchemy import text
+        import json
+        
+        try:
+            result = {"inspection": "Database Schema Inspection", "tables": {}, "foreign_keys": [], "findings": []}
+            
+            # 1. List all tables
+            tables_query = text("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public'
+                ORDER BY table_name
+            """)
+            tables_result = db.execute(tables_query)
+            tables = [row[0] for row in tables_result.fetchall()]
+            result["table_list"] = tables
+            
+            # 2. Inspect each table structure
+            for table_name in tables:
+                columns_query = text("""
+                    SELECT 
+                        column_name,
+                        data_type,
+                        is_nullable,
+                        column_default
+                    FROM information_schema.columns 
+                    WHERE table_name = :table_name
+                    ORDER BY ordinal_position
+                """)
+                
+                columns_result = db.execute(columns_query, {"table_name": table_name})
+                columns = []
+                for col in columns_result.fetchall():
+                    columns.append({
+                        "name": col[0],
+                        "type": col[1], 
+                        "nullable": col[2] == "YES",
+                        "default": col[3]
+                    })
+                result["tables"][table_name] = columns
+            
+            # 3. Foreign key constraints
+            fk_query = text("""
+                SELECT 
+                    tc.table_name, 
+                    kcu.column_name, 
+                    ccu.table_name AS foreign_table_name,
+                    ccu.column_name AS foreign_column_name,
+                    tc.constraint_name
+                FROM 
+                    information_schema.table_constraints AS tc 
+                    JOIN information_schema.key_column_usage AS kcu
+                      ON tc.constraint_name = kcu.constraint_name
+                    JOIN information_schema.constraint_column_usage AS ccu
+                      ON ccu.constraint_name = tc.constraint_name
+                WHERE tc.constraint_type = 'FOREIGN KEY'
+                ORDER BY tc.table_name, kcu.column_name
+            """)
+            
+            fk_result = db.execute(fk_query)
+            for fk in fk_result.fetchall():
+                result["foreign_keys"].append({
+                    "table": fk[0],
+                    "column": fk[1],
+                    "references_table": fk[2],
+                    "references_column": fk[3],
+                    "constraint_name": fk[4]
+                })
+            
+            # 4. Key findings
+            if 'users' in tables and 'user_profiles' in tables:
+                result["findings"].append("❌ BOTH 'users' and 'user_profiles' tables exist!")
+            elif 'users' in tables:
+                result["findings"].append("✅ Only 'users' table exists")
+            elif 'user_profiles' in tables:
+                result["findings"].append("✅ Only 'user_profiles' table exists")
+            else:
+                result["findings"].append("❌ Neither 'users' nor 'user_profiles' found!")
+                
+            if 'trading_accounts' in tables:
+                ta_query = text("""
+                    SELECT column_name, is_nullable, data_type
+                    FROM information_schema.columns 
+                    WHERE table_name = 'trading_accounts'
+                    AND column_name IN ('password', 'server', 'user_id')
+                """)
+                ta_result = db.execute(ta_query)
+                for row in ta_result.fetchall():
+                    nullable = "NULL" if row[1] == "YES" else "NOT NULL"
+                    result["findings"].append(f"📝 trading_accounts.{row[0]}: {nullable} ({row[2]})")
+            
+            return result
+            
+        except Exception as e:
+            return {"error": str(e), "type": str(type(e))}
+    
     logging.info("Database connection successful - Full API enabled")
 except Exception as e:
     logging.warning(f"Database connection failed: {e} - Running with basic endpoints only")
