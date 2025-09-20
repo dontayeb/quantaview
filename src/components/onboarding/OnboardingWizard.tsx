@@ -39,7 +39,10 @@ export default function OnboardingWizard({
 
   const fetchSetupInstructions = async () => {
     try {
-      const instructions = await quantaAPI.get(`/ea/setup-instructions/${accountId}`)
+      const instructions = await quantaAPI.get<{
+        steps: OnboardingStep[]
+        troubleshooting: Record<string, string>
+      }>(`/ea/setup-instructions/${accountId}`)
       setSetupInstructions(instructions)
     } catch (error) {
       console.error('Failed to fetch setup instructions:', error)
