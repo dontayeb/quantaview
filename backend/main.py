@@ -72,6 +72,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 # Try to include routers with database connection, fallback to basic endpoints
 try:
     from database import get_db
+    from sqlalchemy.orm import Session
     from routers import trades, accounts, analytics, api_keys, algorithms, auth
     
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
