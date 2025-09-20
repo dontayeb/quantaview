@@ -75,7 +75,11 @@ export default function OnboardingWizard({
   }
 
   const markStepCompleted = (stepNumber: number) => {
-    setCompletedSteps(prev => new Set([...prev, stepNumber]))
+    setCompletedSteps(prev => {
+      const newSet = new Set(prev)
+      newSet.add(stepNumber)
+      return newSet
+    })
     if (stepNumber === currentStep && stepNumber < 5) {
       setCurrentStep(stepNumber + 1)
     }
