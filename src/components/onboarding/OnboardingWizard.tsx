@@ -1,0 +1,293 @@
+'use client'
+
+import { useState, useEffect } from 'react'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import { CheckCircle2, Download, ExternalLink, AlertCircle, Play } from 'lucide-react'
+import { quantaAPI } from '@/lib/api'
+
+interface OnboardingStep {
+  step: number
+  title: string
+  description: string
+  action: string
+  completed?: boolean
+}
+
+interface OnboardingWizardProps {
+  accountId: string
+  apiKey: string
+  accountName: string
+  onComplete?: () => void
+}
+
+export default function OnboardingWizard({ 
+  accountId, 
+  apiKey, 
+  accountName, 
+  onComplete 
+}: OnboardingWizardProps) {
+  const [currentStep, setCurrentStep] = useState(1)
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set())
+  const [setupInstructions, setSetupInstructions] = useState<{
+    steps: OnboardingStep[]
+    troubleshooting: Record<string, string>
+  } | null>(null)
+  const [isDownloading, setIsDownloading] = useState(false)
+
+  useEffect(() => {
+    fetchSetupInstructions()
+  }, [accountId])
+
+  const fetchSetupInstructions = async () => {
+    try {
+      const instructions = await quantaAPI.get(`/ea/setup-instructions/${accountId}`)
+      setSetupInstructions(instructions)
+    } catch (error) {
+      console.error('Failed to fetch setup instructions:', error)
+    }
+  }
+
+  const downloadEA = async () => {
+    try {
+      setIsDownloading(true)
+      
+      // Create download URL
+      const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ea/download/${accountId}?api_key=${apiKey}`
+      
+      // Trigger download
+      const link = document.createElement('a')
+      link.href = downloadUrl
+      link.download = `QuantaView_${accountName}.mq5`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+      
+      // Mark step as completed
+      markStepCompleted(1)
+      
+    } catch (error) {
+      console.error('Download failed:', error)
+    } finally {
+      setIsDownloading(false)
+    }
+  }
+
+  const markStepCompleted = (stepNumber: number) => {
+    setCompletedSteps(prev => new Set([...prev, stepNumber]))
+    if (stepNumber === currentStep && stepNumber < 5) {
+      setCurrentStep(stepNumber + 1)
+    }
+  }
+
+  const openMT5Settings = () => {
+    // This would ideally open MT5 settings, but we can only provide instructions
+    markStepCompleted(2)
+  }
+
+  const finishOnboarding = () => {
+    markStepCompleted(5)
+    onComplete?.()
+  }
+
+  if (!setupInstructions) {
+    return <div>Loading setup instructions...</div>
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      {/* Header */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Play className="w-6 h-6 text-blue-600" />
+            MT5 Integration Setup
+          </CardTitle>
+          <p className="text-gray-600">
+            Get your {accountName} account connected to QuantaView in 5 simple steps
+          </p>
+        </CardHeader>
+      </Card>
+
+      {/* Progress Bar */}
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-between mb-4">
+            {[1, 2, 3, 4, 5].map((step) => (
+              <div key={step} className="flex items-center">
+                <div className={`
+                  w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
+                  ${completedSteps.has(step) 
+                    ? 'bg-green-100 text-green-700 border-2 border-green-200' 
+                    : step === currentStep
+                    ? 'bg-blue-100 text-blue-700 border-2 border-blue-200'
+                    : 'bg-gray-100 text-gray-500 border-2 border-gray-200'
+                  }
+                `}>
+                  {completedSteps.has(step) ? (
+                    <CheckCircle2 className="w-5 h-5" />
+                  ) : (
+                    step
+                  )}
+                </div>
+                {step < 5 && (
+                  <div className={`
+                    w-16 h-1 mx-2
+                    ${completedSteps.has(step) ? 'bg-green-200' : 'bg-gray-200'}
+                  `} />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="text-center text-sm text-gray-600">
+            Step {currentStep} of 5 • {completedSteps.size}/5 completed
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Steps */}
+      <div className="space-y-4">
+        {setupInstructions.steps.map((step, index) => (
+          <Card key={step.step} className={`
+            ${step.step === currentStep ? 'ring-2 ring-blue-200 border-blue-200' : ''}
+            ${completedSteps.has(step.step) ? 'bg-green-50 border-green-200' : ''}
+          `}>
+            <CardContent className="pt-6">
+              <div className="flex items-start gap-4">
+                <div className={`
+                  w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0
+                  ${completedSteps.has(step.step) 
+                    ? 'bg-green-100 text-green-700' 
+                    : step.step === currentStep
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-500'
+                  }
+                `}>
+                  {completedSteps.has(step.step) ? (
+                    <CheckCircle2 className="w-4 h-4" />
+                  ) : (
+                    step.step
+                  )}
+                </div>
+                
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
+                  <p className="text-gray-600 mb-4">{step.description}</p>
+                  <p className="text-sm text-gray-800 mb-4 bg-gray-50 p-3 rounded">
+                    <strong>Action:</strong> {step.action}
+                  </p>
+                  
+                  {/* Step-specific actions */}
+                  {step.step === 1 && (
+                    <Button 
+                      onClick={downloadEA}
+                      disabled={isDownloading || completedSteps.has(1)}
+                      className="w-full sm:w-auto"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      {isDownloading ? 'Preparing Download...' : 'Download Your EA'}
+                    </Button>
+                  )}
+                  
+                  {step.step === 2 && (
+                    <div className="space-y-2">
+                      <Button 
+                        variant="outline"
+                        onClick={openMT5Settings}
+                        disabled={completedSteps.has(2)}
+                        className="w-full sm:w-auto"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        I've Added the URL
+                      </Button>
+                      <div className="text-xs text-gray-500">
+                        Add this URL: <code className="bg-gray-100 px-2 py-1 rounded">
+                          https://grateful-mindfulness-production-868e.up.railway.app
+                        </code>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {step.step === 3 && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => markStepCompleted(3)}
+                      disabled={completedSteps.has(3)}
+                      className="w-full sm:w-auto"
+                    >
+                      EA Installed & Compiled
+                    </Button>
+                  )}
+                  
+                  {step.step === 4 && (
+                    <Button 
+                      variant="outline"
+                      onClick={() => markStepCompleted(4)}
+                      disabled={completedSteps.has(4)}
+                      className="w-full sm:w-auto"
+                    >
+                      EA Attached to Chart
+                    </Button>
+                  )}
+                  
+                  {step.step === 5 && (
+                    <Button 
+                      onClick={finishOnboarding}
+                      disabled={completedSteps.has(5)}
+                      className="w-full sm:w-auto bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-2" />
+                      Complete Setup
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Troubleshooting */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-amber-600" />
+            Common Issues
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {Object.entries(setupInstructions.troubleshooting).map(([issue, solution]) => (
+              <div key={issue} className="p-3 bg-amber-50 border border-amber-200 rounded">
+                <div className="font-medium text-amber-800 capitalize">
+                  {issue.replace('_', ' ')}: 
+                </div>
+                <div className="text-amber-700">{solution}</div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Success State */}
+      {completedSteps.size === 5 && (
+        <Card className="bg-green-50 border-green-200">
+          <CardContent className="pt-6 text-center">
+            <CheckCircle2 className="w-16 h-16 text-green-600 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-green-800 mb-2">
+              🎉 Setup Complete!
+            </h3>
+            <p className="text-green-700 mb-4">
+              Your {accountName} account is now connected to QuantaView. 
+              Your trades will sync automatically.
+            </p>
+            <Button onClick={() => window.location.href = '/dashboard'}>
+              Go to Dashboard
+            </Button>
+          </CardContent>
+        </Card>
+      )}
+    </div>
+  )
+}

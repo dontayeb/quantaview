@@ -131,6 +131,22 @@ export default function NewAccountPage() {
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
+        {/* Quick Setup Banner */}
+        <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-sm font-medium text-blue-800">Quick MT5 Setup</h3>
+              <p className="text-xs text-blue-600">Get your account + EA in 3 steps</p>
+            </div>
+            <Link 
+              href="/onboarding"
+              className="px-3 py-1.5 bg-blue-600 text-white text-xs rounded hover:bg-blue-700"
+            >
+              Start Setup
+            </Link>
+          </div>
+        </div>
+        
         <div className="mb-8">
           <Link
             href="/dashboard"

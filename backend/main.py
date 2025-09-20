@@ -73,7 +73,7 @@ app.add_exception_handler(Exception, general_exception_handler)
 try:
     from database import get_db
     from sqlalchemy.orm import Session
-    from routers import trades, accounts, analytics, api_keys, algorithms, auth, trades_batch
+    from routers import trades, accounts, analytics, api_keys, algorithms, auth, trades_batch, ea_download
     
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
@@ -82,6 +82,7 @@ try:
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
     app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["api-keys"])
     app.include_router(algorithms.router, prefix="/api/v1/algorithms", tags=["algorithms"])
+    app.include_router(ea_download.router, prefix="/api/v1/ea", tags=["ea-download"])
     
     # Add temporary admin endpoint for database schema inspection
     @app.get("/admin/schema-inspect")
