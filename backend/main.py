@@ -73,10 +73,11 @@ app.add_exception_handler(Exception, general_exception_handler)
 try:
     from database import get_db
     from sqlalchemy.orm import Session
-    from routers import trades, accounts, analytics, api_keys, algorithms, auth
+    from routers import trades, accounts, analytics, api_keys, algorithms, auth, trades_batch
     
     app.include_router(auth.router, prefix="/api/v1/auth", tags=["authentication"])
     app.include_router(trades.router, prefix="/api/v1/trades", tags=["trades"])
+    app.include_router(trades_batch.router, prefix="/api/v1/trades", tags=["trades"])
     app.include_router(accounts.router, prefix="/api/v1/accounts", tags=["accounts"])
     app.include_router(analytics.router, prefix="/api/v1/analytics", tags=["analytics"])
     app.include_router(api_keys.router, prefix="/api/v1/api-keys", tags=["api-keys"])
