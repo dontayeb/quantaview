@@ -19,10 +19,10 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    trading_accounts = relationship("TradingAccount", back_populates="user")
-    algorithms = relationship("TradingAlgorithm", back_populates="user")
-    api_keys = relationship("APIKey", back_populates="user")
+    # Relationships - temporarily disabled due to table mismatch
+    # trading_accounts = relationship("TradingAccount", back_populates="user")
+    # algorithms = relationship("TradingAlgorithm", back_populates="user") 
+    # api_keys = relationship("APIKey", back_populates="user")
 
 class TradingAccount(Base):
     __tablename__ = "trading_accounts"
@@ -41,8 +41,8 @@ class TradingAccount(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships
-    user = relationship("User", back_populates="trading_accounts")
+    # Relationships - user relationship disabled due to table mismatch
+    # user = relationship("User", back_populates="trading_accounts")
     trades = relationship("Trade", back_populates="trading_account")
     api_keys = relationship("APIKey", back_populates="trading_account")
 

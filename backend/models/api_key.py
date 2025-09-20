@@ -30,8 +30,8 @@ class APIKey(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relationships
-    user = relationship("User", back_populates="api_keys")
+    # Relationships - user relationship disabled due to table mismatch
+    # user = relationship("User", back_populates="api_keys")
     trading_account = relationship("TradingAccount", back_populates="api_keys")
     
     @property
