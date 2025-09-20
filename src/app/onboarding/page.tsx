@@ -57,7 +57,7 @@ function OnboardingContent() {
       setIsLoading(true)
       
       // Get user ID from localStorage or auth context
-      const token = localStorage.getItem('token')
+      const token = localStorage.getItem('access_token')
       if (!token) {
         router.push('/login?redirect=/onboarding')
         return
