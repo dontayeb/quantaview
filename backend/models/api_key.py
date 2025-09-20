@@ -1,5 +1,5 @@
 from sqlalchemy import Column, String, DateTime, Boolean, Text, ForeignKey
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, ARRAY
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 import uuid
@@ -15,10 +15,10 @@ class APIKey(Base):
     key_prefix = Column(String(20), nullable=False)  # First few chars for display
     
     # Permissions
-    scopes = Column(Text, nullable=False, default="trades:write")  # JSON array of scopes
+    scopes = Column(ARRAY(String), nullable=True, default=[])  # PostgreSQL array of scopes
     
     # Ownership
-    user_id = Column(UUID(as_uuid=True), ForeignKey("users.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), nullable=True)
     trading_account_id = Column(UUID(as_uuid=True), ForeignKey("trading_accounts.id"), nullable=True)
     
     # Security
@@ -30,8 +30,8 @@ class APIKey(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     
-    # Relationships - user relationship disabled due to table mismatch
-    # user = relationship("User", back_populates="api_keys")
+    # Relationships
+    user_profile = relationship("UserProfile", back_populates="api_keys")
     trading_account = relationship("TradingAccount", back_populates="api_keys")
     
     @property
@@ -61,10 +61,10 @@ class APIKey(Base):
     
     def has_scope(self, required_scope: str) -> bool:
         """Check if API key has required scope"""
-        import json
         try:
-            scopes_list = json.loads(self.scopes)
-            return required_scope in scopes_list
+            if self.scopes is None:
+                return False
+            return required_scope in self.scopes
         except:
             return False
     

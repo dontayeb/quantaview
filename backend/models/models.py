@@ -19,10 +19,7 @@ class User(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships - temporarily disabled due to table mismatch
-    # trading_accounts = relationship("TradingAccount", back_populates="user")
-    # algorithms = relationship("TradingAlgorithm", back_populates="user") 
-    # api_keys = relationship("APIKey", back_populates="user")
+    # Note: User table exists but relationships go through UserProfile table
 
 class UserProfile(Base):
     __tablename__ = "user_profiles"
@@ -32,14 +29,19 @@ class UserProfile(Base):
     full_name = Column(String, nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    # Relationships - UserProfile is the main user table referenced by foreign keys
+    trading_accounts = relationship("TradingAccount", back_populates="user_profile")
+    algorithms = relationship("TradingAlgorithm", back_populates="user_profile")
+    api_keys = relationship("APIKey", back_populates="user_profile")
 
 class TradingAccount(Base):
     __tablename__ = "trading_accounts"
     
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), nullable=False)
+    user_id = Column(UUID(as_uuid=True), ForeignKey("user_profiles.id"), nullable=True)
     account_name = Column(String, nullable=False)
-    account_number = Column(Integer, nullable=True)
+    account_number = Column(Integer, nullable=False)
     password = Column(String, nullable=False, default="placeholder")
     server = Column(String, nullable=False, default="Unknown")
     broker = Column(String, nullable=True)
@@ -50,8 +52,8 @@ class TradingAccount(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
-    # Relationships - user relationship disabled due to table mismatch
-    # user = relationship("User", back_populates="trading_accounts")
+    # Relationships
+    user_profile = relationship("UserProfile", back_populates="trading_accounts")
     trades = relationship("Trade", back_populates="trading_account")
     api_keys = relationship("APIKey", back_populates="trading_account")
 
