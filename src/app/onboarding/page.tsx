@@ -3,18 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { CheckCircleIcon, ArrowRightIcon, KeyIcon, CloudArrowDownIcon } from '@heroicons/react/24/outline'
-import { quantaAPI } from '@/lib/api'
+import { quantaAPI, TradingAccount } from '@/lib/api'
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard'
-
-interface TradingAccount {
-  id: string
-  account_name: string
-  account_number: number
-  broker: string
-  account_type: string
-  currency: string
-  starting_balance: number
-}
 
 interface APIKey {
   id: string
