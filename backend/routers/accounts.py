@@ -21,26 +21,29 @@ async def create_account(account: TradingAccountCreate, db: Session = Depends(ge
     try:
         print(f"Creating account with data: {account.dict()}")
         
-        # Check if user exists in user_profiles table, create if needed
+        # Check if user exists in users table, create if needed
         from sqlalchemy import text
         
-        # Check if user exists in user_profiles
-        result = db.execute(text("SELECT id FROM user_profiles WHERE id = :user_id"), {"user_id": account.user_id})
+        # Check if user exists in users
+        result = db.execute(text("SELECT id FROM users WHERE id = :user_id"), {"user_id": account.user_id})
         user_exists = result.fetchone()
         
         if not user_exists:
-            print(f"User not found in user_profiles: {account.user_id}, creating mock user")
-            # Create mock user in user_profiles table
+            print(f"User not found in users: {account.user_id}, creating mock user")
+            # Create mock user in users table
             db.execute(text("""
-                INSERT INTO user_profiles (id, email, full_name, created_at, updated_at) 
-                VALUES (:user_id, :email, :full_name, NOW(), NOW())
+                INSERT INTO users (id, email, password_hash, full_name, is_active, is_email_verified, created_at, updated_at) 
+                VALUES (:user_id, :email, :password_hash, :full_name, :is_active, :is_email_verified, NOW(), NOW())
             """), {
                 "user_id": account.user_id,
                 "email": "test@example.com", 
-                "full_name": "Test User"
+                "password_hash": "placeholder_hash",
+                "full_name": "Test User",
+                "is_active": True,
+                "is_email_verified": True
             })
             db.commit()
-            print(f"Created mock user in user_profiles: {account.user_id}")
+            print(f"Created mock user in users: {account.user_id}")
         
         # Check for duplicate account number
         existing_account = db.query(AccountModel).filter(
