@@ -96,12 +96,28 @@ async def create_api_key(
         
         # Validate trading account ownership if specified
         if key_data.trading_account_id:
+            print(f"Looking for trading account: {key_data.trading_account_id}")
+            print(f"Current user ID: {current_user.id}")
+            
+            # First check if account exists at all
+            account_exists = db.query(TradingAccount).filter(
+                TradingAccount.id == key_data.trading_account_id
+            ).first()
+            print(f"Account exists: {account_exists is not None}")
+            if account_exists:
+                print(f"Account user_id: {account_exists.user_id}")
+                print(f"Account name: {account_exists.account_name}")
+            
             trading_account = db.query(TradingAccount).filter(
                 TradingAccount.id == key_data.trading_account_id,
                 TradingAccount.user_id == current_user.id
             ).first()
             
             if not trading_account:
+                error_msg = f"Trading account not found. Account ID: {key_data.trading_account_id}, User ID: {current_user.id}"
+                if account_exists:
+                    error_msg += f". Account exists but belongs to user: {account_exists.user_id}"
+                print(error_msg)
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail="Trading account not found"
