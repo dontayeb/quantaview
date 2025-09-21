@@ -26,16 +26,10 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # In a real app, you'd verify the JWT token here
-        # For now, return a mock user for testing
         token = credentials.credentials
+        print(f"Validating JWT token: {token[:20]}..." if token else "No token received")
         
-        # Debug logging
-        print(f"Received token: {token[:20]}..." if token else "No token received")
-        if token == "test_token":
-            print("WARNING: Received test_token instead of real JWT token")
-        
-        # Check if token is valid (for debugging, accept any non-empty token)
+        # Check if token is valid
         if not token or token.strip() == "":
             print("Empty or invalid token")
             raise HTTPException(
@@ -44,19 +38,64 @@ async def get_current_user(
                 headers={"WWW-Authenticate": "Bearer"},
             )
         
-        # Mock user for testing - replace with real JWT verification
-        # Create a mock user object that matches the User model
+        # Import JWT verification function from auth router
+        import jwt
         from uuid import UUID
-        from datetime import datetime
-        mock_user = User()
-        mock_user.id = UUID("123e4567-e89b-12d3-a456-426614174000")
-        mock_user.email = "test@example.com"
-        mock_user.full_name = "Test User"
-        mock_user.is_active = True
-        mock_user.is_email_verified = True
-        mock_user.created_at = datetime.utcnow()
         
-        return mock_user
+        # JWT settings (must match auth.py)
+        SECRET_KEY = "your-secret-key-change-this-in-production"  # In production, use environment variable
+        ALGORITHM = "HS256"
+        
+        try:
+            # Decode and verify the JWT token
+            payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+            user_id_str = payload.get("sub")
+            
+            if user_id_str is None:
+                print("No user ID in token payload")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Invalid token payload",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            # Convert to UUID and find user in database
+            user_id = UUID(user_id_str)
+            user = db.query(User).filter(User.id == user_id).first()
+            
+            if user is None:
+                print(f"User not found for ID: {user_id}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="User not found",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            if not user.is_active:
+                print(f"Inactive user attempted access: {user.email}")
+                raise HTTPException(
+                    status_code=status.HTTP_401_UNAUTHORIZED,
+                    detail="Inactive user",
+                    headers={"WWW-Authenticate": "Bearer"},
+                )
+            
+            print(f"✅ Authenticated user: {user.email} (ID: {user.id})")
+            return user
+            
+        except jwt.ExpiredSignatureError:
+            print("Token has expired")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Token expired",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
+        except jwt.JWTError as e:
+            print(f"JWT validation error: {e}")
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Could not validate token",
+                headers={"WWW-Authenticate": "Bearer"},
+            )
         
     except HTTPException:
         raise
