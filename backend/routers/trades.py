@@ -12,8 +12,22 @@ router = APIRouter()
 @router.get("/{account_id}", response_model=List[Trade])
 async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
     """Get all trades for a trading account"""
-    trades = db.query(TradeModel).filter(TradeModel.trading_account_id == account_id).all()
-    return trades
+    try:
+        print(f"Getting trades for account: {account_id}")
+        trades = db.query(TradeModel).filter(TradeModel.trading_account_id == account_id).all()
+        print(f"Found {len(trades)} trades")
+        
+        # Debug first trade if any exist
+        if trades:
+            trade = trades[0]
+            print(f"First trade: {trade.id}, symbol: {trade.symbol}, type: {trade.type}")
+        
+        return trades
+    except Exception as e:
+        print(f"Error in get_trades: {e}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error retrieving trades: {str(e)}")
 
 @router.post("/", response_model=Trade)
 async def create_trade(trade: TradeCreate, db: Session = Depends(get_db)):
