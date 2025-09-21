@@ -74,6 +74,27 @@ async def get_trade(trade_id: UUID, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Trade not found")
     return trade
 
+@router.delete("/account/{account_id}/delete-all")
+async def delete_all_trades(account_id: UUID, db: Session = Depends(get_db)):
+    """Delete all trades for a trading account"""
+    try:
+        # Get count before deletion
+        count = db.query(TradeModel).filter(TradeModel.trading_account_id == account_id).count()
+        print(f"Deleting {count} trades for account {account_id}...")
+        
+        # Delete all trades for the account
+        db.query(TradeModel).filter(TradeModel.trading_account_id == account_id).delete()
+        db.commit()
+        
+        return {
+            "message": f"Successfully deleted {count} trades for account {account_id}", 
+            "deleted_count": count
+        }
+    except Exception as e:
+        print(f"Error deleting trades: {e}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail="Failed to delete trades")
+
 @router.get("/debug/count/{account_id}")
 async def debug_trades_count(account_id: str, db: Session = Depends(get_db)):
     """Debug endpoint to check trades count"""

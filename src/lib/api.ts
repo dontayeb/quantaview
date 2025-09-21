@@ -294,6 +294,12 @@ class QuantaViewAPI {
     return this.request(`/api/v1/trades/trade/${tradeId}`)
   }
 
+  async deleteAllTrades(accountId: string): Promise<{ message: string; deleted_count: number }> {
+    return this.request(`/api/v1/trades/account/${accountId}/delete-all`, {
+      method: 'DELETE'
+    })
+  }
+
   // Authentication
   async register(email: string, password: string, fullName?: string): Promise<{
     access_token: string

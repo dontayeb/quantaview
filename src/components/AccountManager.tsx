@@ -176,11 +176,15 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
 
     setIsDeletingTrades(true)
     try {
-      // TODO: Implement delete trades API endpoint
-      // await quantaAPI.deleteTrades(deletingTradesForAccountId)
+      const result = await quantaAPI.deleteAllTrades(deletingTradesForAccountId)
       
-      alert('Delete trades functionality not yet implemented with Railway API')
+      alert(`Successfully deleted ${result.deleted_count} trades for this account.`)
       setDeletingTradesForAccountId(null)
+      
+      // Refresh data if this is the currently selected account
+      if (selectedAccount?.id === deletingTradesForAccountId) {
+        onAccountsChange() // This will trigger a refresh of trades data
+      }
     } catch (error) {
       console.error('Error deleting trades:', error)
       alert('Failed to delete trades. Please try again.')
