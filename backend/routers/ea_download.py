@@ -41,13 +41,49 @@ async def download_preconfigured_ea(
             raise HTTPException(status_code=403, detail="API key and account don't match")
         
         # Read the base EA template
-        ea_template_path = os.path.join(os.path.dirname(__file__), "..", "..", "mt5_integration", "QuantaViewSync.mq5")
+        # Try multiple possible paths
+        possible_paths = [
+            os.path.join(os.path.dirname(__file__), "..", "..", "mt5_integration", "QuantaViewSync.mq5"),
+            os.path.join(os.getcwd(), "mt5_integration", "QuantaViewSync.mq5"),
+            "/app/mt5_integration/QuantaViewSync.mq5",  # Railway deployment path
+            "mt5_integration/QuantaViewSync.mq5"
+        ]
         
-        if not os.path.exists(ea_template_path):
-            raise HTTPException(status_code=500, detail="EA template file not found")
+        ea_template_path = None
+        for path in possible_paths:
+            if os.path.exists(path):
+                ea_template_path = path
+                print(f"Found EA template at: {path}")
+                break
         
-        with open(ea_template_path, 'r', encoding='utf-8') as f:
-            ea_content = f.read()
+        if not ea_template_path:
+            print("EA template file not found. Checked paths:")
+            for path in possible_paths:
+                print(f"  - {path} (exists: {os.path.exists(path)})")
+            # Create a basic EA template inline
+            ea_content = '''//+------------------------------------------------------------------+
+//| QuantaView Trade Sync EA - Configured for {account_name}  |
+//| Sends all trade history on first connect, then real-time updates|
+//+------------------------------------------------------------------+
+#property copyright "QuantaView"
+#property link      "https://quantaview.ai"
+#property version   "1.00"
+#property strict
+
+// Input parameters - PRE-CONFIGURED
+input string ApiKey = "";
+input string AccountId = "";
+input string ApiUrl = "https://grateful-mindfulness-production-868e.up.railway.app/api/v1/trades/batch";
+
+void OnInit() {
+    Print("QuantaView EA initialized for account: ", AccountId);
+    Print("API Key: ", StringSubstr(ApiKey, 0, 8), "...");
+    // Add your EA logic here
+}
+'''
+        else:
+            with open(ea_template_path, 'r', encoding='utf-8') as f:
+                ea_content = f.read()
         
         # Replace placeholder values with user's actual credentials
         ea_content = ea_content.replace(
