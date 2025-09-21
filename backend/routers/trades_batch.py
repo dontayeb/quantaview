@@ -43,9 +43,16 @@ async def receive_trade_batch(
         
         for trade_data in batch.trades:
             try:
+                # Convert trading_account_id to UUID
+                try:
+                    account_uuid = uuid.UUID(trade_data.trading_account_id)
+                except ValueError:
+                    print(f"Invalid UUID format for account ID: {trade_data.trading_account_id}")
+                    continue
+                
                 # Check if deal already exists (prevent duplicates)
                 existing_trade = db.query(TradeModel).filter(
-                    TradeModel.trading_account_id == trade_data.trading_account_id,
+                    TradeModel.trading_account_id == account_uuid,
                     TradeModel.ticket == trade_data.deal_id
                 ).first()
                 
@@ -59,7 +66,7 @@ async def receive_trade_batch(
                 # Create new trade record
                 db_trade = TradeModel(
                     id=uuid.uuid4(),
-                    trading_account_id=trade_data.trading_account_id,
+                    trading_account_id=account_uuid,
                     position=trade_data.position_id,
                     ticket=trade_data.deal_id,
                     magic_number=0,  # MT5 deals don't have magic numbers like positions do
