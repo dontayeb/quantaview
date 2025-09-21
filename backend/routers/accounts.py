@@ -29,10 +29,6 @@ async def get_accounts(user_id: UUID, db: Session = Depends(get_db)):
                 "currency": account.currency,
                 "account_type": account.account_type,
                 "starting_balance": float(account.starting_balance),
-                "balance": float(account.balance) if account.balance else None,
-                "equity": float(account.equity) if account.equity else None,
-                "free_margin": float(account.free_margin) if account.free_margin else None,
-                "margin_level": float(account.margin_level) if account.margin_level else None,
                 "is_active": account.is_active,
                 "created_at": account.created_at.isoformat() if account.created_at else None,
                 "updated_at": account.updated_at.isoformat() if account.updated_at else None
