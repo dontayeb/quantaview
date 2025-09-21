@@ -148,6 +148,56 @@ async def delete_all_accounts(db: Session = Depends(get_db)):
         db.rollback()
         raise HTTPException(status_code=500, detail="Failed to delete accounts")
 
+@router.delete("/admin/delete-everything")
+async def delete_everything(db: Session = Depends(get_db)):
+    """Admin endpoint to delete ALL data - accounts, users, trades, API keys - USE WITH EXTREME CAUTION"""
+    try:
+        from models.models import User
+        from models.api_key import APIKey
+        from models.trade import Trade
+        
+        print("🚨 DELETING ALL DATA - This cannot be undone!")
+        
+        # Get counts before deletion
+        accounts_count = db.query(AccountModel).count()
+        users_count = db.query(User).count()
+        api_keys_count = db.query(APIKey).count()
+        trades_count = db.query(Trade).count()
+        
+        print(f"Found {accounts_count} accounts, {users_count} users, {api_keys_count} API keys, {trades_count} trades")
+        
+        # Delete in order to avoid foreign key constraints
+        print("1. Deleting API keys...")
+        db.query(APIKey).delete()
+        
+        print("2. Deleting trades...")
+        db.query(Trade).delete()
+        
+        print("3. Deleting trading accounts...")
+        db.query(AccountModel).delete()
+        
+        print("4. Deleting users...")
+        db.query(User).delete()
+        
+        db.commit()
+        print("✅ All data deleted successfully!")
+        
+        return {
+            "message": "Successfully deleted ALL data from database", 
+            "deleted": {
+                "accounts": accounts_count,
+                "users": users_count,
+                "api_keys": api_keys_count,
+                "trades": trades_count
+            }
+        }
+    except Exception as e:
+        print(f"Error deleting all data: {e}")
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        db.rollback()
+        raise HTTPException(status_code=500, detail=f"Failed to delete all data: {str(e)}")
+
 @router.get("/admin/check-account/{account_number}")
 async def check_account_number(account_number: int, db: Session = Depends(get_db)):
     """Admin endpoint to check if an account number exists"""
