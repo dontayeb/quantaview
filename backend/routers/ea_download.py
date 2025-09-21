@@ -22,22 +22,39 @@ async def download_preconfigured_ea(
     Download pre-configured EA file with user's credentials embedded
     """
     try:
+        print(f"EA Download request: account_id={account_id}, api_key={api_key[:8]}...")
+        
         # Verify the account exists and belongs to the API key owner
         account = db.query(TradingAccount).filter(TradingAccount.id == account_id).first()
         if not account:
+            print(f"Account not found: {account_id}")
             raise HTTPException(status_code=404, detail="Trading account not found")
         
+        print(f"Account found: {account.account_name}, user_id: {account.user_id}")
+        
         # Verify the API key exists and has the right permissions
+        key_prefix = api_key[:8]
+        print(f"Looking for API key with prefix: {key_prefix}")
+        
         api_key_record = db.query(APIKey).filter(
-            APIKey.key_prefix == api_key[:8],
+            APIKey.key_prefix == key_prefix,
             APIKey.is_active == True
         ).first()
         
         if not api_key_record:
-            raise HTTPException(status_code=404, detail="API key not found")
+            print(f"API key not found with prefix: {key_prefix}")
+            # Debug: check what API keys exist for this user
+            all_keys = db.query(APIKey).filter(APIKey.user_id == account.user_id).all()
+            print(f"Available API keys for user {account.user_id}:")
+            for key in all_keys:
+                print(f"  - {key.key_prefix} (active: {key.is_active})")
+            raise HTTPException(status_code=404, detail=f"API key not found with prefix: {key_prefix}")
+        
+        print(f"API key found: {api_key_record.key_prefix}, user_id: {api_key_record.user_id}")
         
         # Verify the API key belongs to the same user as the account
         if api_key_record.user_id != account.user_id:
+            print(f"User ID mismatch: API key user {api_key_record.user_id} != account user {account.user_id}")
             raise HTTPException(status_code=403, detail="API key and account don't match")
         
         # Read the base EA template
