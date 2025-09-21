@@ -197,7 +197,7 @@ void SyncNewClosedTrades()
 string FormatDealAsJson(ulong dealTicket)
 {
     // Get deal properties
-    long dealType = HistoryDealGetInteger(dealTicket, DEAL_TYPE);
+    int dealType = (int)HistoryDealGetInteger(dealTicket, DEAL_TYPE);
     string symbol = HistoryDealGetString(dealTicket, DEAL_SYMBOL);
     double volume = HistoryDealGetDouble(dealTicket, DEAL_VOLUME);
     double price = HistoryDealGetDouble(dealTicket, DEAL_PRICE);
@@ -227,9 +227,6 @@ string FormatDealAsJson(ulong dealTicket)
         case DEAL_TYPE_INTEREST: dealTypeStr = "interest"; break;
         case DEAL_TYPE_BUY_CANCELED: dealTypeStr = "buy_canceled"; break;
         case DEAL_TYPE_SELL_CANCELED: dealTypeStr = "sell_canceled"; break;
-        case DEAL_TYPE_DIVIDEND: dealTypeStr = "dividend"; break;
-        case DEAL_TYPE_DIVIDEND_FRANKED: dealTypeStr = "dividend_franked"; break;
-        case DEAL_TYPE_TAX: dealTypeStr = "tax"; break;
         default: dealTypeStr = "unknown"; break;
     }
     
