@@ -152,9 +152,8 @@ async def delete_all_accounts(db: Session = Depends(get_db)):
 async def delete_everything(db: Session = Depends(get_db)):
     """Admin endpoint to delete ALL data - accounts, users, trades, API keys - USE WITH EXTREME CAUTION"""
     try:
-        from models.models import User
+        from models.models import User, Trade
         from models.api_key import APIKey
-        from models.trade import Trade
         
         print("🚨 DELETING ALL DATA - This cannot be undone!")
         
