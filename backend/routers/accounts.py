@@ -51,13 +51,26 @@ async def create_account(account: TradingAccountCreate, db: Session = Depends(ge
                 print(f"User {account.user_id} not found in users table either")
                 raise HTTPException(status_code=400, detail="User not found")
         
-        # Check for duplicate account number
+        # Check for duplicate account number (but allow if it was previously deleted)
         existing_account = db.query(AccountModel).filter(
             AccountModel.account_number == account.account_number
         ).first()
         if existing_account:
-            print(f"Duplicate account number: {account.account_number}")
-            raise HTTPException(status_code=400, detail=f"Account number {account.account_number} already exists")
+            print(f"Found existing account with number {account.account_number}:")
+            print(f"  - Account ID: {existing_account.id}")
+            print(f"  - Account Name: {existing_account.account_name}")
+            print(f"  - Owner User ID: {existing_account.user_id}")
+            print(f"  - Active: {existing_account.is_active}")
+            
+            # If the existing account belongs to the same user, delete it first
+            if existing_account.user_id == account.user_id:
+                print(f"Existing account belongs to same user, deleting it first...")
+                db.delete(existing_account)
+                db.commit()
+                print(f"✅ Deleted existing account {existing_account.id}")
+            else:
+                print(f"❌ Account number {account.account_number} belongs to different user")
+                raise HTTPException(status_code=400, detail=f"Account number {account.account_number} already exists")
         
         db_account = AccountModel(**account.dict())
         print(f"Created account model: {db_account}")
