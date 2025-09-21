@@ -17,28 +17,45 @@ async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
         trades = db.query(TradeModel).filter(TradeModel.trading_account_id == account_id).all()
         print(f"Found {len(trades)} trades")
         
-        # Debug first trade if any exist
-        if trades:
-            trade = trades[0]
-            print(f"First trade: {trade.id}, symbol: {trade.symbol}, type: {trade.type}")
+        # Return simplified trade data that matches frontend expectations
+        result = []
+        for trade in trades:
+            try:
+                trade_data = {
+                    "id": str(trade.id),
+                    "trading_account_id": str(trade.trading_account_id),
+                    "position": trade.position,
+                    "ticket": trade.ticket,
+                    "magic_number": trade.magic_number,
+                    "symbol": trade.symbol,
+                    "type": trade.type,
+                    "volume": float(trade.volume),
+                    "open_price": float(trade.open_price),
+                    "close_price": float(trade.close_price) if trade.close_price else None,
+                    "stop_loss": float(trade.stop_loss) if trade.stop_loss else None,
+                    "take_profit": float(trade.take_profit) if trade.take_profit else None,
+                    "profit": float(trade.profit),
+                    "commission": float(trade.commission),
+                    "swap": float(trade.swap),
+                    "open_time": trade.open_time.isoformat() if trade.open_time else None,
+                    "close_time": trade.close_time.isoformat() if trade.close_time else None,
+                    "comment": trade.comment,
+                    "created_at": trade.created_at.isoformat() if trade.created_at else None,
+                    "updated_at": trade.updated_at.isoformat() if trade.updated_at else None
+                }
+                result.append(trade_data)
+            except Exception as trade_error:
+                print(f"Error processing trade {trade.id}: {trade_error}")
+                continue
         
-        # Return simplified data for debugging
-        return [
-            {
-                "id": str(trade.id),
-                "symbol": trade.symbol,
-                "type": trade.type,
-                "volume": trade.volume,
-                "profit": trade.profit,
-                "open_time": trade.open_time.isoformat() if trade.open_time else None,
-                "close_time": trade.close_time.isoformat() if trade.close_time else None
-            } for trade in trades
-        ]
+        print(f"Successfully processed {len(result)} trades")
+        return result
+        
     except Exception as e:
         print(f"Error in get_trades: {e}")
         import traceback
         print(f"Full traceback: {traceback.format_exc()}")
-        raise HTTPException(status_code=500, detail=f"Error retrieving trades: {str(e)}")
+        return {"error": f"Error retrieving trades: {str(e)}", "trades": []}
 
 @router.post("/", response_model=Trade)
 async def create_trade(trade: TradeCreate, db: Session = Depends(get_db)):
