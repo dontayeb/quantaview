@@ -36,17 +36,36 @@ async def create_account(account: TradingAccountCreate, db: Session = Depends(ge
             user_data = user_result.fetchone()
             
             if user_data:
-                # Create user_profile entry with actual user data
-                db.execute(text("""
-                    INSERT INTO user_profiles (id, email, full_name, created_at, updated_at) 
-                    VALUES (:user_id, :email, :full_name, NOW(), NOW())
-                """), {
-                    "user_id": account.user_id,
-                    "email": user_data.email,
-                    "full_name": user_data.full_name or "User"
-                })
+                # Check if email already exists in user_profiles (different user_id, same email)
+                email_check = db.execute(text("SELECT id FROM user_profiles WHERE email = :email"), {"email": user_data.email})
+                existing_profile = email_check.fetchone()
+                
+                if existing_profile:
+                    print(f"Email {user_data.email} already exists in user_profiles with different user_id: {existing_profile.id}")
+                    # Update the existing profile to use the current user_id
+                    db.execute(text("""
+                        UPDATE user_profiles 
+                        SET id = :user_id, full_name = :full_name, updated_at = NOW()
+                        WHERE email = :email
+                    """), {
+                        "user_id": account.user_id,
+                        "email": user_data.email,
+                        "full_name": user_data.full_name or "User"
+                    })
+                    print(f"Updated existing user_profile for email {user_data.email}")
+                else:
+                    # Create user_profile entry with actual user data
+                    db.execute(text("""
+                        INSERT INTO user_profiles (id, email, full_name, created_at, updated_at) 
+                        VALUES (:user_id, :email, :full_name, NOW(), NOW())
+                    """), {
+                        "user_id": account.user_id,
+                        "email": user_data.email,
+                        "full_name": user_data.full_name or "User"
+                    })
+                    print(f"Created new user_profile from users table: {account.user_id}")
+                
                 db.commit()
-                print(f"Created user_profile from users table: {account.user_id}")
             else:
                 print(f"User {account.user_id} not found in users table either")
                 raise HTTPException(status_code=400, detail="User not found")
