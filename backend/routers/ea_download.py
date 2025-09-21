@@ -72,7 +72,8 @@ async def download_preconfigured_ea(
         # Read the base EA template
         # Try multiple possible paths
         possible_paths = [
-            os.path.join(os.path.dirname(__file__), "..", "..", "mt5_integration", "QuantaViewSync.mq5"),
+            os.path.join(os.path.dirname(__file__), "..", "mt5_integration", "QuantaViewSync.mq5"),  # backend/mt5_integration/
+            os.path.join(os.path.dirname(__file__), "..", "..", "mt5_integration", "QuantaViewSync.mq5"),  # root mt5_integration/
             os.path.join(os.getcwd(), "mt5_integration", "QuantaViewSync.mq5"),
             "/app/mt5_integration/QuantaViewSync.mq5",  # Railway deployment path
             "mt5_integration/QuantaViewSync.mq5"
