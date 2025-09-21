@@ -9,7 +9,7 @@ from schemas import Trade, TradeCreate
 
 router = APIRouter()
 
-@router.get("/{account_id}", response_model=List[Trade])
+@router.get("/{account_id}")
 async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
     """Get all trades for a trading account"""
     try:
@@ -22,7 +22,18 @@ async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
             trade = trades[0]
             print(f"First trade: {trade.id}, symbol: {trade.symbol}, type: {trade.type}")
         
-        return trades
+        # Return simplified data for debugging
+        return [
+            {
+                "id": str(trade.id),
+                "symbol": trade.symbol,
+                "type": trade.type,
+                "volume": trade.volume,
+                "profit": trade.profit,
+                "open_time": trade.open_time.isoformat() if trade.open_time else None,
+                "close_time": trade.close_time.isoformat() if trade.close_time else None
+            } for trade in trades
+        ]
     except Exception as e:
         print(f"Error in get_trades: {e}")
         import traceback
