@@ -32,30 +32,34 @@ async def download_preconfigured_ea(
         
         print(f"Account found: {account.account_name}, user_id: {account.user_id}")
         
-        # Verify the API key exists and has the right permissions
+        # Find the API key belonging to this user that matches the provided key prefix
         key_prefix = api_key[:8]
         print(f"Looking for API key with prefix: {key_prefix}")
         
-        api_key_record = db.query(APIKey).filter(
-            APIKey.key_prefix == key_prefix,
+        # Get all active API keys for this user
+        user_keys = db.query(APIKey).filter(
+            APIKey.user_id == account.user_id,
             APIKey.is_active == True
-        ).first()
+        ).all()
+        
+        print(f"Found {len(user_keys)} active keys for user {account.user_id}")
+        
+        api_key_record = None
+        for key in user_keys:
+            print(f"  Checking key: {key.key_prefix}")
+            if key.key_prefix == key_prefix:
+                api_key_record = key
+                print(f"  ✓ MATCH: Found API key {key.key_prefix}")
+                break
         
         if not api_key_record:
-            print(f"API key not found with prefix: {key_prefix}")
-            # Debug: check what API keys exist for this user
-            all_keys = db.query(APIKey).filter(APIKey.user_id == account.user_id).all()
+            print(f"❌ API key not found with prefix: {key_prefix}")
             print(f"Available API keys for user {account.user_id}:")
-            for key in all_keys:
+            for key in user_keys:
                 print(f"  - {key.key_prefix} (active: {key.is_active})")
             raise HTTPException(status_code=404, detail=f"API key not found with prefix: {key_prefix}")
         
-        print(f"API key found: {api_key_record.key_prefix}, user_id: {api_key_record.user_id}")
-        
-        # Verify the API key belongs to the same user as the account
-        if api_key_record.user_id != account.user_id:
-            print(f"User ID mismatch: API key user {api_key_record.user_id} != account user {account.user_id}")
-            raise HTTPException(status_code=403, detail="API key and account don't match")
+        print(f"✅ API key validated: {api_key_record.key_prefix}, user_id: {api_key_record.user_id}")
         
         # Read the base EA template
         # Try multiple possible paths
