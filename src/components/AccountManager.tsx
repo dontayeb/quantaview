@@ -1,7 +1,7 @@
 'use client'
 
-import { useState } from 'react'
-import { PencilIcon, TrashIcon, XMarkIcon, CheckIcon, ExclamationTriangleIcon } from '@heroicons/react/24/outline'
+import { useState, useEffect } from 'react'
+import { PencilIcon, TrashIcon, XMarkIcon, CheckIcon, ExclamationTriangleIcon, CloudArrowDownIcon, KeyIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
 import { quantaAPI, type TradingAccount } from '@/lib/api'
 
 interface AccountManagerProps {
@@ -30,6 +30,67 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
   const [isDeleting, setIsDeleting] = useState(false)
   const [isDeletingTrades, setIsDeletingTrades] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [apiKeys, setApiKeys] = useState<any[]>([])
+  const [showApiKeysModal, setShowApiKeysModal] = useState<string | null>(null)
+  const [isDownloadingEA, setIsDownloadingEA] = useState<string | null>(null)
+  const [copiedKey, setCopiedKey] = useState<string | null>(null)
+
+  // Fetch API keys when component mounts
+  useEffect(() => {
+    const fetchApiKeys = async () => {
+      try {
+        const keys = await quantaAPI.getApiKeys()
+        setApiKeys(keys)
+      } catch (error) {
+        console.error('Error fetching API keys:', error)
+      }
+    }
+    fetchApiKeys()
+  }, [])
+
+  const handleDownloadEA = async (account: TradingAccount) => {
+    // Find an API key for this account
+    const accountApiKey = apiKeys.find(key => key.trading_account_id === account.id)
+    
+    if (!accountApiKey) {
+      alert('No API key found for this account. Please create an API key first.')
+      return
+    }
+
+    setIsDownloadingEA(account.id)
+    try {
+      const blob = await quantaAPI.downloadEA(account.id, accountApiKey.api_key)
+      
+      // Create download link
+      const url = window.URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `QuantaView_${account.account_name.replace(/[^a-zA-Z0-9]/g, '_')}.mq5`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      window.URL.revokeObjectURL(url)
+    } catch (error) {
+      console.error('Error downloading EA:', error)
+      alert('Failed to download EA. Please try again.')
+    } finally {
+      setIsDownloadingEA(null)
+    }
+  }
+
+  const handleShowApiKeys = async (accountId: string) => {
+    setShowApiKeysModal(accountId)
+  }
+
+  const handleCopyApiKey = async (apiKey: string) => {
+    try {
+      await navigator.clipboard.writeText(apiKey)
+      setCopiedKey(apiKey)
+      setTimeout(() => setCopiedKey(null), 2000)
+    } catch (error) {
+      console.error('Failed to copy API key:', error)
+    }
+  }
 
   const handleEditClick = (account: TradingAccount) => {
     setEditingAccount({
@@ -314,6 +375,21 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
                   
                   <div className="flex items-center space-x-1 ml-4">
                     <button
+                      onClick={() => handleDownloadEA(account)}
+                      disabled={isDownloadingEA === account.id}
+                      className="p-2 text-gray-400 hover:text-green-600 rounded-full hover:bg-green-50 disabled:opacity-50"
+                      title="Download EA file"
+                    >
+                      <CloudArrowDownIcon className="h-4 w-4" />
+                    </button>
+                    <button
+                      onClick={() => handleShowApiKeys(account.id)}
+                      className="p-2 text-gray-400 hover:text-purple-600 rounded-full hover:bg-purple-50"
+                      title="View API keys"
+                    >
+                      <KeyIcon className="h-4 w-4" />
+                    </button>
+                    <button
                       onClick={() => handleEditClick(account)}
                       className="p-2 text-gray-400 hover:text-blue-600 rounded-full hover:bg-blue-50"
                       title="Edit account"
@@ -347,6 +423,64 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
           </div>
         ))}
       </div>
+
+      {/* API Keys Modal */}
+      {showApiKeysModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-lg w-full mx-4 max-h-96 overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium text-gray-900">API Keys for Account</h3>
+              <button
+                onClick={() => setShowApiKeysModal(null)}
+                className="text-gray-400 hover:text-gray-600"
+              >
+                <XMarkIcon className="h-6 w-6" />
+              </button>
+            </div>
+            
+            <div className="space-y-3">
+              {apiKeys
+                .filter(key => key.trading_account_id === showApiKeysModal)
+                .map((key) => (
+                  <div key={key.id} className="border rounded-lg p-3">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <div className="font-medium text-gray-900">{key.name}</div>
+                        <div className="text-sm text-gray-500">
+                          Created: {new Date(key.created_at).toLocaleDateString()}
+                        </div>
+                        <div className="text-xs text-gray-400 font-mono mt-1">
+                          {key.key_prefix}...
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => handleCopyApiKey(key.api_key)}
+                        className="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                      >
+                        <ClipboardDocumentIcon className="h-4 w-4 mr-1" />
+                        {copiedKey === key.api_key ? 'Copied!' : 'Copy'}
+                      </button>
+                    </div>
+                    <div className="mt-2">
+                      <div className="text-xs text-gray-500">Scopes: {key.scopes?.join(', ')}</div>
+                    </div>
+                  </div>
+                ))}
+              
+              {apiKeys.filter(key => key.trading_account_id === showApiKeysModal).length === 0 && (
+                <div className="text-center py-4 text-gray-500">
+                  No API keys found for this account
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 text-sm text-gray-600">
+              <p>• Use these API keys to configure your MT5 EA</p>
+              <p>• Keep your API keys secure and don't share them</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Account Confirmation Modal */}
       {deletingAccountId && (

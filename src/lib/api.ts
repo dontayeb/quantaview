@@ -419,6 +419,21 @@ class QuantaViewAPI {
   async getApiKeyPresets(): Promise<any> {
     return this.request('/api/v1/api-keys/presets')
   }
+
+  // EA Download
+  async downloadEA(accountId: string, apiKey: string): Promise<Blob> {
+    const response = await fetch(`${this.baseUrl}/api/v1/ea/download/${accountId}?api_key=${apiKey}`, {
+      headers: {
+        'Authorization': typeof window !== 'undefined' ? `Bearer ${localStorage.getItem('access_token')}` : 'Bearer test_token',
+      },
+    })
+    
+    if (!response.ok) {
+      throw new Error('Failed to download EA file')
+    }
+    
+    return await response.blob()
+  }
 }
 
 export const quantaAPI = new QuantaViewAPI()
