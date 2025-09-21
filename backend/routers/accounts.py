@@ -15,30 +15,38 @@ async def get_accounts(user_id: UUID, db: Session = Depends(get_db)):
     try:
         accounts = db.query(AccountModel).filter(AccountModel.user_id == user_id).all()
         
-        # Return simplified account data without problematic nested trades
+        # Simple account data
         result = []
         for account in accounts:
-            account_data = {
-                "id": str(account.id),
-                "user_id": str(account.user_id),
-                "account_number": account.account_number,
-                "account_name": account.account_name,
-                "password": account.password,
-                "server": account.server,
-                "broker": account.broker,
-                "currency": account.currency,
-                "account_type": account.account_type,
-                "starting_balance": float(account.starting_balance),
-                "is_active": account.is_active,
-                "created_at": account.created_at.isoformat() if account.created_at else None,
-                "updated_at": account.updated_at.isoformat() if account.updated_at else None
-            }
-            result.append(account_data)
+            try:
+                account_data = {
+                    "id": str(account.id),
+                    "user_id": str(account.user_id) if account.user_id else None,
+                    "account_number": account.account_number,
+                    "account_name": account.account_name,
+                    "password": account.password,
+                    "server": account.server,
+                    "broker": account.broker,
+                    "currency": account.currency,
+                    "account_type": account.account_type,
+                    "starting_balance": float(account.starting_balance) if account.starting_balance else 0.0,
+                    "is_active": account.is_active,
+                    "created_at": account.created_at.isoformat() if hasattr(account, 'created_at') and account.created_at else None,
+                    "updated_at": account.updated_at.isoformat() if hasattr(account, 'updated_at') and account.updated_at else None
+                }
+                result.append(account_data)
+            except Exception as account_error:
+                print(f"Error processing account {account.id}: {account_error}")
+                continue
         
+        print(f"Returning {len(result)} accounts")
         return result
+        
     except Exception as e:
         print(f"Error in get_accounts: {e}")
-        return {"error": f"Error retrieving accounts: {str(e)}", "accounts": []}
+        import traceback
+        print(f"Full traceback: {traceback.format_exc()}")
+        return []
 
 @router.post("/", response_model=TradingAccount)
 async def create_account(account: TradingAccountCreate, db: Session = Depends(get_db)):
