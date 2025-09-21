@@ -79,10 +79,13 @@ async def download_preconfigured_ea(
         ]
         
         ea_template_path = None
+        print("Checking EA template paths:")
         for path in possible_paths:
-            if os.path.exists(path):
+            exists = os.path.exists(path)
+            print(f"  - {path} (exists: {exists})")
+            if exists:
                 ea_template_path = path
-                print(f"Found EA template at: {path}")
+                print(f"✅ Found EA template at: {path}")
                 break
         
         if not ea_template_path:
