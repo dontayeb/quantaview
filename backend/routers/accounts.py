@@ -9,11 +9,40 @@ from schemas import TradingAccount, TradingAccountCreate, TradingAccountUpdate
 
 router = APIRouter()
 
-@router.get("/{user_id}", response_model=List[TradingAccount])
+@router.get("/{user_id}")
 async def get_accounts(user_id: UUID, db: Session = Depends(get_db)):
     """Get all trading accounts for a user"""
-    accounts = db.query(AccountModel).filter(AccountModel.user_id == user_id).all()
-    return accounts
+    try:
+        accounts = db.query(AccountModel).filter(AccountModel.user_id == user_id).all()
+        
+        # Return simplified account data without problematic nested trades
+        result = []
+        for account in accounts:
+            account_data = {
+                "id": str(account.id),
+                "user_id": str(account.user_id),
+                "account_number": account.account_number,
+                "account_name": account.account_name,
+                "password": account.password,
+                "server": account.server,
+                "broker": account.broker,
+                "currency": account.currency,
+                "account_type": account.account_type,
+                "starting_balance": float(account.starting_balance),
+                "balance": float(account.balance) if account.balance else None,
+                "equity": float(account.equity) if account.equity else None,
+                "free_margin": float(account.free_margin) if account.free_margin else None,
+                "margin_level": float(account.margin_level) if account.margin_level else None,
+                "is_active": account.is_active,
+                "created_at": account.created_at.isoformat() if account.created_at else None,
+                "updated_at": account.updated_at.isoformat() if account.updated_at else None
+            }
+            result.append(account_data)
+        
+        return result
+    except Exception as e:
+        print(f"Error in get_accounts: {e}")
+        return {"error": f"Error retrieving accounts: {str(e)}", "accounts": []}
 
 @router.post("/", response_model=TradingAccount)
 async def create_account(account: TradingAccountCreate, db: Session = Depends(get_db)):
