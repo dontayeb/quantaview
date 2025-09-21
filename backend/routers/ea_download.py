@@ -46,13 +46,12 @@ async def download_preconfigured_ea(
         
         api_key_record = None
         for key in user_keys:
-            print(f"  Checking key: '{key.key_prefix}' (len={len(key.key_prefix)})")
-            print(f"  Against target: '{key_prefix}' (len={len(key_prefix)})")
-            print(f"  Are equal? {key.key_prefix == key_prefix}")
-            print(f"  Key bytes: {key.key_prefix.encode('utf-8')}")
-            print(f"  Target bytes: {key_prefix.encode('utf-8')}")
+            stored_prefix = key.key_prefix[:8]  # Compare only first 8 characters
+            print(f"  Checking key: '{key.key_prefix}' -> first 8: '{stored_prefix}'")
+            print(f"  Against target: '{key_prefix}'")
+            print(f"  First 8 chars equal? {stored_prefix == key_prefix}")
             
-            if key.key_prefix == key_prefix:
+            if stored_prefix == key_prefix:
                 api_key_record = key
                 print(f"  ✓ MATCH: Found API key {key.key_prefix}")
                 break
