@@ -9,19 +9,6 @@ from schemas import Trade, TradeCreate
 
 router = APIRouter()
 
-@router.get("/debug/{account_id}")
-async def debug_trades(account_id: str, db: Session = Depends(get_db)):
-    """Debug endpoint to check trades"""
-    try:
-        # Test raw SQL query
-        from sqlalchemy import text
-        result = db.execute(text("SELECT COUNT(*) FROM trades WHERE trading_account_id = :account_id"), {"account_id": account_id})
-        count = result.fetchone()[0]
-        
-        return {"account_id": account_id, "trade_count": count, "message": "Debug successful"}
-    except Exception as e:
-        return {"error": str(e), "account_id": account_id}
-
 @router.get("/{account_id}")
 async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
     """Get all trades for a trading account"""
@@ -69,3 +56,16 @@ async def get_trade(trade_id: UUID, db: Session = Depends(get_db)):
     if not trade:
         raise HTTPException(status_code=404, detail="Trade not found")
     return trade
+
+@router.get("/debug/count/{account_id}")
+async def debug_trades_count(account_id: str, db: Session = Depends(get_db)):
+    """Debug endpoint to check trades count"""
+    try:
+        # Test raw SQL query
+        from sqlalchemy import text
+        result = db.execute(text("SELECT COUNT(*) FROM trades WHERE trading_account_id = :account_id"), {"account_id": account_id})
+        count = result.fetchone()[0]
+        
+        return {"account_id": account_id, "trade_count": count, "message": "Debug successful"}
+    except Exception as e:
+        return {"error": str(e), "account_id": account_id}
