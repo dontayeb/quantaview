@@ -14,7 +14,7 @@ import { useTrades } from '@/hooks/useTradesRailway'
 import { UserNav } from '@/components/UserNav'
 import { AIInsights } from '@/components/AIInsights'
 import { ProfitabilityHeatmap } from '@/components/ProfitabilityHeatmap'
-import { PlusIcon, Cog6ToothIcon } from '@heroicons/react/24/outline'
+import { PlusIcon, Cog6ToothIcon, BoltIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
 
 export default function DashboardPage() {
@@ -102,6 +102,14 @@ export default function DashboardPage() {
               >
                 <Cog6ToothIcon className="h-4 w-4 mr-2" />
                 Manage Accounts
+              </Link>
+
+              <Link
+                href="/dashboard/ea-setup"
+                className="inline-flex items-center px-4 py-2 border border-gray-200 text-sm font-medium rounded-lg shadow-dashboard text-dashboard-textLight bg-dashboard-card hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 whitespace-nowrap transition-all duration-200"
+              >
+                <BoltIcon className="h-4 w-4 mr-2" />
+                EA Setup
               </Link>
               
               <Link

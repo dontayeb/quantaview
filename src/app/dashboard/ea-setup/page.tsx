@@ -81,57 +81,82 @@ export default function EASetupPage() {
   const fetchInstructions = async (accountId: string) => {
     if (!accountId) return
     
-    setLoading(true)
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
-      const response = await fetch(`${apiUrl}/api/v1/ea/setup-instructions/${accountId}`)
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch setup instructions')
+    const selectedAccountData = accounts.find(acc => acc.id === accountId)
+    if (!selectedAccountData) return
+
+    // Static instructions for pre-compiled EA approach
+    const staticInstructions: SetupInstructions = {
+      account_name: selectedAccountData.account_name,
+      account_number: selectedAccountData.account_number,
+      steps: [
+        {
+          step: 1,
+          title: "Download the EA File",
+          description: "Download the pre-compiled QuantaView EA file (.ex4 for MT4 or .ex5 for MT5).",
+          action: "Click the download button above to save the EA file to your computer"
+        },
+        {
+          step: 2,
+          title: "Install in MetaTrader",
+          description: "Copy the EA file to your MetaTrader Experts folder and restart the platform.",
+          action: "MT4: File → Open Data Folder → MQL4 → Experts\nMT5: File → Open Data Folder → MQL5 → Experts"
+        },
+        {
+          step: 3,
+          title: "Enable WebRequest",
+          description: "Allow the EA to communicate with QuantaView servers.",
+          action: "Tools → Options → Expert Advisors → Allow WebRequest → Add URL below"
+        },
+        {
+          step: 4,
+          title: "Attach to Chart",
+          description: "Drag the QuantaView EA from Navigator onto any chart and configure parameters.",
+          action: "Navigator → Expert Advisors → QuantaView EA → drag to chart"
+        },
+        {
+          step: 5,
+          title: "Configure EA Parameters",
+          description: "In the EA settings dialog, enter your QuantaView credentials (see values below).",
+          action: `Set ApiKey = "${apiKey}" and AccountId = "${accountId}"`
+        },
+        {
+          step: 6,
+          title: "Enable Auto Trading",
+          description: "Enable auto trading and verify the EA is running with a smiley face icon.",
+          action: "Click 'Auto Trading' button in toolbar (should turn green)"
+        }
+      ],
+      troubleshooting: {
+        webRequest_error: "Add the API URL to WebRequest whitelist: Tools → Options → Expert Advisors → Allow WebRequest for 'https://grateful-mindfulness-production-868e.up.railway.app'",
+        no_logs: "Check the Experts tab in terminal for EA logs. If no logs appear: 1) Verify EA is attached to chart, 2) Auto trading is enabled, 3) Parameters are set correctly",
+        api_error: "Common issues: 1) Check API key format (starts with 'qv_'), 2) Verify Account ID matches your QuantaView account, 3) Ensure internet connection is stable"
       }
-      
-      const data = await response.json()
-      setInstructions(data)
-    } catch (error) {
-      console.error('Error fetching instructions:', error)
-      showToast("Error", "Failed to load setup instructions", "destructive")
-    } finally {
-      setLoading(false)
     }
+
+    setInstructions(staticInstructions)
   }
 
   const downloadEA = async () => {
-    if (!selectedAccount || !apiKey) {
-      showToast("Missing Information", "Please select an account and ensure you have an API key", "destructive")
-      return
-    }
-
     setDownloadLoading(true)
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080'
-      const response = await fetch(
-        `${apiUrl}/api/v1/ea/download/${selectedAccount}?api_key=${apiKey}`
-      )
-
+      // Download EA file directly from public folder
+      const filename = 'QuantaView_EA.ex5'
+      const url = `/downloads/${filename}`
+      
+      const response = await fetch(url)
       if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.detail || 'Download failed')
+        throw new Error('Download failed - EA file not found')
       }
 
-      const contentDisposition = response.headers.get('Content-Disposition')
-      const filename = contentDisposition 
-        ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
-        : 'QuantaView_EA.mq5'
-
       const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
+      const downloadUrl = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.style.display = 'none'
-      a.href = url
+      a.href = downloadUrl
       a.download = filename
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
+      window.URL.revokeObjectURL(downloadUrl)
       document.body.removeChild(a)
 
       showToast("Download Successful", `${filename} has been downloaded to your computer`)
@@ -239,15 +264,15 @@ export default function EASetupPage() {
               <h2 className="text-lg font-semibold text-gray-900">Download Pre-Configured EA</h2>
             </div>
             <p className="text-gray-600 mt-1">
-              Your EA is automatically configured for {selectedAccountData.account_name} - no manual setup required!
+              Download the ready-to-use EA file and set your API credentials in the EA parameters
             </p>
           </div>
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
               <div className="space-y-1">
-                <p className="font-medium text-gray-900">QuantaView_{selectedAccountData.account_name}.mq5</p>
+                <p className="font-medium text-gray-900">QuantaView_EA.ex5</p>
                 <p className="text-sm text-gray-600">
-                  Pre-configured for account {selectedAccountData.account_number}
+                  Pre-compiled MT5 Expert Advisor - ready to use with any QuantaView account
                 </p>
               </div>
               <button 
@@ -264,8 +289,8 @@ export default function EASetupPage() {
               <div className="flex items-center gap-2">
                 <BoltIcon className="h-4 w-4 text-green-600" />
                 <div className="text-green-800">
-                  <strong>Zero Configuration Required!</strong> Your API key and account ID are 
-                  already embedded in the downloaded file. Just compile and attach to any chart.
+                  <strong>No Setup Required!</strong> Pre-compiled EA file ready for MT4/MT5. 
+                  Just install, attach to chart, and enter your API credentials.
                 </div>
               </div>
             </div>
@@ -294,7 +319,7 @@ export default function EASetupPage() {
                   <div className="p-3 bg-gray-50 rounded-lg">
                     <p className="text-sm font-mono text-gray-800">{step.action}</p>
                   </div>
-                  {step.step === 2 && (
+                  {step.step === 3 && (
                     <div className="flex items-center gap-2 mt-2">
                       <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
                         https://grateful-mindfulness-production-868e.up.railway.app
@@ -304,8 +329,38 @@ export default function EASetupPage() {
                         className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                       >
                         <ClipboardIcon className="h-3 w-3" />
-                        Copy
+                        Copy URL
                       </button>
+                    </div>
+                  )}
+                  {step.step === 5 && (
+                    <div className="space-y-2 mt-2">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">API Key:</span>
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
+                          {apiKey}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(apiKey)}
+                          className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                        >
+                          <ClipboardIcon className="h-3 w-3" />
+                          Copy
+                        </button>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-600">Account ID:</span>
+                        <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
+                          {selectedAccount}
+                        </code>
+                        <button
+                          onClick={() => copyToClipboard(selectedAccount)}
+                          className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
+                        >
+                          <ClipboardIcon className="h-3 w-3" />
+                          Copy
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
