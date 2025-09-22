@@ -120,6 +120,9 @@ export function TradesList({ trades, loading }: TradesListProps) {
               <th className="px-6 py-3 text-left">
                 <SortButton field="open_time">Open Time</SortButton>
               </th>
+              <th className="px-6 py-3 text-left">
+                <SortButton field="close_time">Close Time</SortButton>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
@@ -177,6 +180,9 @@ export function TradesList({ trades, loading }: TradesListProps) {
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
                   {formatDate(trade.open_time)}
+                </td>
+                <td className="px-6 py-4 text-sm text-gray-500">
+                  {formatDate(trade.close_time)}
                 </td>
               </tr>
             ))}
