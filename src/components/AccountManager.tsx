@@ -458,11 +458,13 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
                         </div>
                       </div>
                       <button
-                        onClick={() => handleCopyApiKey(key.api_key)}
-                        className="flex items-center px-2 py-1 text-sm bg-blue-100 text-blue-700 rounded hover:bg-blue-200"
+                        onClick={() => handleCopyApiKey(key.key_prefix)}
+                        className="flex items-center px-2 py-1 text-sm bg-gray-100 text-gray-600 rounded hover:bg-gray-200"
+                        disabled
+                        title="Full API key not available for security. Use API Keys page to create new keys."
                       >
                         <ClipboardDocumentIcon className="h-4 w-4 mr-1" />
-                        {copiedKey === key.api_key ? 'Copied!' : 'Copy'}
+                        View Only
                       </button>
                     </div>
                     <div className="mt-2">
@@ -478,9 +480,19 @@ export function AccountManager({ accounts, selectedAccount, onSelect, onAccounts
               )}
             </div>
             
-            <div className="mt-4 text-sm text-gray-600">
-              <p>• Use these API keys to configure your MT5 EA</p>
-              <p>• Keep your API keys secure and don't share them</p>
+            <div className="mt-4 space-y-3">
+              <div className="text-sm text-gray-600">
+                <p>• Full API keys are only shown when first created for security</p>
+                <p>• To get your API key for EA setup, visit the <strong>API Keys</strong> page and create a new key</p>
+                <p>• Keep your API keys secure and don't share them</p>
+              </div>
+              <a 
+                href="/dashboard/api-keys"
+                className="inline-flex items-center px-3 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                <KeyIcon className="h-4 w-4 mr-2" />
+                Manage API Keys
+              </a>
             </div>
           </div>
         </div>
