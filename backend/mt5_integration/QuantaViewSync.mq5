@@ -4,16 +4,22 @@
 //+------------------------------------------------------------------+
 #property copyright "QuantaView"
 #property link      "https://quantaview.ai"
-#property version   "1.00"
+#property version   "1.01"
 #property strict
 
-// Input parameters
+// Version info for update checking
+string EA_VERSION = "1.01";
+string VERSION_CHECK_URL = "https://grateful-mindfulness-production-868e.up.railway.app/api/v1/ea/version";
+
+// Pre-configured parameters (automatically set when downloaded from QuantaView)
+input string ApiKey = ""; // Automatically configured - do not change
+input string AccountId = ""; // Automatically configured - do not change
+
+// Optional settings you can modify
 input string ApiUrl = "https://grateful-mindfulness-production-868e.up.railway.app"; // QuantaView API URL
-input string ApiKey = ""; // Your QuantaView API Key (get from dashboard)
-input string AccountId = ""; // Your QuantaView Account ID (from dashboard)
 input int BatchSize = 100; // Number of trades to send per batch
-input int SyncIntervalSeconds = 30; // How often to check for new closed trades
-input bool EnableLogging = true; // Enable detailed logging
+input int SyncIntervalSeconds = 30; // How often to check for new closed trades (seconds)
+input bool EnableLogging = true; // Show detailed logs in Expert tab
 
 // Global variables
 datetime lastSyncTime = 0;

@@ -226,3 +226,22 @@ async def get_setup_instructions(
     except Exception as e:
         print(f"Error generating setup instructions: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to generate instructions: {str(e)}")
+
+@router.get("/version")
+async def get_latest_version():
+    """
+    Get the latest EA version for update checking
+    """
+    return {
+        "version": "1.01",
+        "release_date": "2025-09-22",
+        "download_url": "/api/v1/ea/download",
+        "changelog": [
+            "Fixed real-time trade monitoring with proper timer initialization",
+            "Fixed datetime parsing for MT4/MT5 format trades",
+            "Improved error handling and logging",
+            "Added automatic version checking"
+        ],
+        "minimum_mt5_build": 3320,
+        "status": "stable"
+    }
