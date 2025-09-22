@@ -182,7 +182,7 @@ export function TradesList({ trades, loading }: TradesListProps) {
                   {formatDate(trade.open_time)}
                 </td>
                 <td className="px-6 py-4 text-sm text-gray-500">
-                  {formatDate(trade.close_time)}
+                  {trade.close_time ? formatDate(trade.close_time) : '-'}
                 </td>
               </tr>
             ))}

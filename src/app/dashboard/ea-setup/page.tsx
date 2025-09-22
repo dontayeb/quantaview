@@ -1,13 +1,8 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Download, CheckCircle, AlertCircle, ExternalLink, Copy, Settings, Zap } from 'lucide-react'
-import { useToast } from '@/hooks/use-toast'
+import { ArrowDownTrayIcon, CheckCircleIcon, ExclamationCircleIcon, ClipboardIcon, Cog6ToothIcon, BoltIcon } from '@heroicons/react/24/outline'
+import Link from 'next/link'
 
 interface TradingAccount {
   id: string
@@ -41,8 +36,12 @@ export default function EASetupPage() {
   const [instructions, setInstructions] = useState<SetupInstructions | null>(null)
   const [loading, setLoading] = useState(false)
   const [downloadLoading, setDownloadLoading] = useState(false)
-  const router = useRouter()
-  const { toast } = useToast()
+  const [toast, setToast] = useState<{title: string, description: string, variant?: string} | null>(null)
+
+  const showToast = (title: string, description: string, variant: string = 'default') => {
+    setToast({ title, description, variant })
+    setTimeout(() => setToast(null), 5000)
+  }
 
   useEffect(() => {
     fetchAccounts()
@@ -51,7 +50,7 @@ export default function EASetupPage() {
 
   const fetchAccounts = async () => {
     try {
-      // For now, use a mock account since we're testing
+      // Mock account for demo
       const mockAccounts = [
         {
           id: 'ca02be81-8de8-4129-8ddc-4d14cd8cebff',
@@ -67,17 +66,12 @@ export default function EASetupPage() {
       }
     } catch (error) {
       console.error('Error fetching accounts:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load trading accounts",
-        variant: "destructive"
-      })
+      showToast("Error", "Failed to load trading accounts", "destructive")
     }
   }
 
   const fetchApiKey = async () => {
     try {
-      // Mock API key for demonstration
       setApiKey('qv_test_1234567890abcdef')
     } catch (error) {
       console.error('Error fetching API key:', error)
@@ -100,11 +94,7 @@ export default function EASetupPage() {
       setInstructions(data)
     } catch (error) {
       console.error('Error fetching instructions:', error)
-      toast({
-        title: "Error",
-        description: "Failed to load setup instructions",
-        variant: "destructive"
-      })
+      showToast("Error", "Failed to load setup instructions", "destructive")
     } finally {
       setLoading(false)
     }
@@ -112,11 +102,7 @@ export default function EASetupPage() {
 
   const downloadEA = async () => {
     if (!selectedAccount || !apiKey) {
-      toast({
-        title: "Missing Information",
-        description: "Please select an account and ensure you have an API key",
-        variant: "destructive"
-      })
+      showToast("Missing Information", "Please select an account and ensure you have an API key", "destructive")
       return
     }
 
@@ -132,13 +118,11 @@ export default function EASetupPage() {
         throw new Error(errorData.detail || 'Download failed')
       }
 
-      // Get filename from response headers
       const contentDisposition = response.headers.get('Content-Disposition')
       const filename = contentDisposition 
         ? contentDisposition.split('filename=')[1]?.replace(/"/g, '')
         : 'QuantaView_EA.mq5'
 
-      // Download the file
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
@@ -150,17 +134,10 @@ export default function EASetupPage() {
       window.URL.revokeObjectURL(url)
       document.body.removeChild(a)
 
-      toast({
-        title: "Download Successful",
-        description: `${filename} has been downloaded to your computer`,
-      })
+      showToast("Download Successful", `${filename} has been downloaded to your computer`)
     } catch (error: any) {
       console.error('Download error:', error)
-      toast({
-        title: "Download Failed",
-        description: error.message || "Failed to download EA file",
-        variant: "destructive"
-      })
+      showToast("Download Failed", error.message || "Failed to download EA file", "destructive")
     } finally {
       setDownloadLoading(false)
     }
@@ -168,45 +145,54 @@ export default function EASetupPage() {
 
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
-    toast({
-      title: "Copied",
-      description: "Copied to clipboard",
-    })
+    showToast("Copied", "Copied to clipboard")
   }
 
   const selectedAccountData = accounts.find(acc => acc.id === selectedAccount)
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
+    <div className="container mx-auto py-8 space-y-6 max-w-4xl">
+      {/* Toast notification */}
+      {toast && (
+        <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg border shadow-lg ${
+          toast.variant === 'destructive' 
+            ? 'bg-red-50 border-red-200 text-red-800' 
+            : 'bg-green-50 border-green-200 text-green-800'
+        }`}>
+          <div className="font-medium">{toast.title}</div>
+          <div className="text-sm opacity-90">{toast.description}</div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="space-y-2">
-        <h1 className="text-3xl font-bold">EA Setup & Download</h1>
-        <p className="text-muted-foreground">
+        <h1 className="text-3xl font-bold text-gray-900">EA Setup & Download</h1>
+        <p className="text-gray-600">
           Download your pre-configured Expert Advisor and connect your MT5 account to QuantaView
         </p>
       </div>
 
       {/* Account Selection */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Settings className="h-5 w-5" />
-            Select Trading Account
-          </CardTitle>
-          <CardDescription>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <div className="flex items-center gap-2">
+            <Cog6ToothIcon className="h-5 w-5 text-gray-600" />
+            <h2 className="text-lg font-semibold text-gray-900">Select Trading Account</h2>
+          </div>
+          <p className="text-gray-600 mt-1">
             Choose which trading account you want to connect to QuantaView
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
+          </p>
+        </div>
+        <div className="p-6">
           {accounts.length > 0 ? (
-            <div className="grid gap-3">
+            <div className="space-y-3">
               {accounts.map((account) => (
                 <div
                   key={account.id}
                   className={`border rounded-lg p-4 cursor-pointer transition-colors ${
                     selectedAccount === account.id
-                      ? 'border-primary bg-primary/5'
-                      : 'border-border hover:border-primary/50'
+                      ? 'border-blue-500 bg-blue-50'
+                      : 'border-gray-200 hover:border-blue-300'
                   }`}
                   onClick={() => {
                     setSelectedAccount(account.id)
@@ -215,169 +201,176 @@ export default function EASetupPage() {
                 >
                   <div className="flex items-center justify-between">
                     <div>
-                      <h3 className="font-medium">{account.account_name}</h3>
-                      <p className="text-sm text-muted-foreground">
+                      <h3 className="font-medium text-gray-900">{account.account_name}</h3>
+                      <p className="text-sm text-gray-600">
                         Account: {account.account_number} • Broker: {account.broker}
                       </p>
                     </div>
-                    <Badge variant={selectedAccount === account.id ? "default" : "outline"}>
+                    <span className={`px-3 py-1 rounded-full text-sm font-medium ${
+                      selectedAccount === account.id 
+                        ? "bg-blue-100 text-blue-800" 
+                        : "bg-gray-100 text-gray-700"
+                    }`}>
                       {selectedAccount === account.id ? "Selected" : "Select"}
-                    </Badge>
+                    </span>
                   </div>
                 </div>
               ))}
             </div>
           ) : (
-            <Alert>
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                No trading accounts found. Please create a trading account first.
-              </AlertDescription>
-            </Alert>
+            <div className="border border-yellow-200 bg-yellow-50 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <ExclamationCircleIcon className="h-4 w-4 text-yellow-600" />
+                <span className="text-yellow-800">
+                  No trading accounts found. Please create a trading account first.
+                </span>
+              </div>
+            </div>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Download Section */}
       {selectedAccountData && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Download className="h-5 w-5" />
-              Download Pre-Configured EA
-            </CardTitle>
-            <CardDescription>
-              Your EA is automatically configured for {selectedAccountData.account_name} 
-              - no manual setup required!
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-muted/50">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <ArrowDownTrayIcon className="h-5 w-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Download Pre-Configured EA</h2>
+            </div>
+            <p className="text-gray-600 mt-1">
+              Your EA is automatically configured for {selectedAccountData.account_name} - no manual setup required!
+            </p>
+          </div>
+          <div className="p-6 space-y-4">
+            <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
               <div className="space-y-1">
-                <p className="font-medium">QuantaView_{selectedAccountData.account_name}.mq5</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-medium text-gray-900">QuantaView_{selectedAccountData.account_name}.mq5</p>
+                <p className="text-sm text-gray-600">
                   Pre-configured for account {selectedAccountData.account_number}
                 </p>
               </div>
-              <Button 
+              <button 
                 onClick={downloadEA} 
                 disabled={downloadLoading}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
               >
-                <Download className="h-4 w-4" />
+                <ArrowDownTrayIcon className="h-4 w-4" />
                 {downloadLoading ? 'Downloading...' : 'Download EA'}
-              </Button>
+              </button>
             </div>
 
-            <Alert>
-              <Zap className="h-4 w-4" />
-              <AlertDescription>
-                <strong>Zero Configuration Required!</strong> Your API key and account ID are 
-                already embedded in the downloaded file. Just compile and attach to any chart.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
+            <div className="border border-green-200 bg-green-50 rounded-lg p-4">
+              <div className="flex items-center gap-2">
+                <BoltIcon className="h-4 w-4 text-green-600" />
+                <div className="text-green-800">
+                  <strong>Zero Configuration Required!</strong> Your API key and account ID are 
+                  already embedded in the downloaded file. Just compile and attach to any chart.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Setup Instructions */}
       {instructions && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Setup Instructions</CardTitle>
-            <CardDescription>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <h2 className="text-lg font-semibold text-gray-900">Setup Instructions</h2>
+            <p className="text-gray-600 mt-1">
               Follow these steps to install and configure your QuantaView EA
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            {instructions.steps.map((step, index) => (
+            </p>
+          </div>
+          <div className="p-6 space-y-6">
+            {instructions.steps.map((step) => (
               <div key={step.step} className="flex gap-4">
-                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+                <div className="flex-shrink-0 w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-sm font-medium">
                   {step.step}
                 </div>
-                <div className="space-y-2">
-                  <h3 className="font-medium">{step.title}</h3>
-                  <p className="text-sm text-muted-foreground">{step.description}</p>
-                  <div className="p-3 bg-muted rounded-lg">
-                    <p className="text-sm font-mono">{step.action}</p>
+                <div className="space-y-2 flex-1">
+                  <h3 className="font-medium text-gray-900">{step.title}</h3>
+                  <p className="text-sm text-gray-600">{step.description}</p>
+                  <div className="p-3 bg-gray-50 rounded-lg">
+                    <p className="text-sm font-mono text-gray-800">{step.action}</p>
                   </div>
                   {step.step === 2 && (
                     <div className="flex items-center gap-2 mt-2">
-                      <code className="text-xs bg-muted px-2 py-1 rounded">
+                      <code className="text-xs bg-gray-100 px-2 py-1 rounded text-gray-800">
                         https://grateful-mindfulness-production-868e.up.railway.app
                       </code>
-                      <Button
-                        variant="outline"
-                        size="sm"
+                      <button
                         onClick={() => copyToClipboard('https://grateful-mindfulness-production-868e.up.railway.app')}
+                        className="flex items-center gap-1 px-2 py-1 text-xs border border-gray-300 rounded hover:bg-gray-50 transition-colors"
                       >
-                        <Copy className="h-3 w-3" />
-                      </Button>
+                        <ClipboardIcon className="h-3 w-3" />
+                        Copy
+                      </button>
                     </div>
                   )}
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       )}
 
       {/* Troubleshooting */}
       {instructions && (
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5" />
-              Troubleshooting
-            </CardTitle>
-            <CardDescription>
-              Common issues and their solutions
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-medium text-sm">WebRequest Error</h4>
-                <p className="text-sm text-muted-foreground">{instructions.troubleshooting.webRequest_error}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm">No Logs Appearing</h4>
-                <p className="text-sm text-muted-foreground">{instructions.troubleshooting.no_logs}</p>
-              </div>
-              <div>
-                <h4 className="font-medium text-sm">API Connection Error</h4>
-                <p className="text-sm text-muted-foreground">{instructions.troubleshooting.api_error}</p>
-              </div>
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center gap-2">
+              <ExclamationCircleIcon className="h-5 w-5 text-gray-600" />
+              <h2 className="text-lg font-semibold text-gray-900">Troubleshooting</h2>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-gray-600 mt-1">
+              Common issues and their solutions
+            </p>
+          </div>
+          <div className="p-6 space-y-4">
+            <div>
+              <h4 className="font-medium text-sm text-gray-900">WebRequest Error</h4>
+              <p className="text-sm text-gray-600">{instructions.troubleshooting.webRequest_error}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-sm text-gray-900">No Logs Appearing</h4>
+              <p className="text-sm text-gray-600">{instructions.troubleshooting.no_logs}</p>
+            </div>
+            <div>
+              <h4 className="font-medium text-sm text-gray-900">API Connection Error</h4>
+              <p className="text-sm text-gray-600">{instructions.troubleshooting.api_error}</p>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Support */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Need Help?</CardTitle>
-          <CardDescription>
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+        <div className="px-6 py-4 border-b border-gray-200">
+          <h2 className="text-lg font-semibold text-gray-900">Need Help?</h2>
+          <p className="text-gray-600 mt-1">
             Having trouble with the setup? We're here to help!
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+          </p>
+        </div>
+        <div className="p-6">
           <div className="flex items-center gap-4">
-            <Button variant="outline" asChild>
-              <a href="mailto:support@quantaview.ai" className="flex items-center gap-2">
-                <ExternalLink className="h-4 w-4" />
-                Contact Support
-              </a>
-            </Button>
-            <Button variant="outline" asChild>
-              <a href="/dashboard" className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Back to Dashboard
-              </a>
-            </Button>
+            <a 
+              href="mailto:support@quantaview.ai" 
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <ExclamationCircleIcon className="h-4 w-4" />
+              Contact Support
+            </a>
+            <Link 
+              href="/dashboard"
+              className="flex items-center gap-2 px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              <CheckCircleIcon className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
