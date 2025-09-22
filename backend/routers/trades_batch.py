@@ -60,8 +60,17 @@ async def receive_trade_batch(
                     skipped_count += 1
                     continue
                 
-                # Parse the datetime string
-                trade_time = datetime.fromisoformat(trade_data.time.replace('Z', '+00:00'))
+                # Parse the datetime string - handle both ISO format and MT4/MT5 format
+                try:
+                    # Try ISO format first (e.g., "2025-09-22T02:18:19.000Z")
+                    trade_time = datetime.fromisoformat(trade_data.time.replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        # Try MT4/MT5 format (e.g., "2025.09.15 03:36:43")
+                        trade_time = datetime.strptime(trade_data.time, '%Y.%m.%d %H:%M:%S')
+                    except ValueError:
+                        print(f"Invalid datetime format: {trade_data.time}")
+                        continue
                 
                 # Create new trade record
                 db_trade = TradeModel(
