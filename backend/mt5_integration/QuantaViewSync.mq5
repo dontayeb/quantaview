@@ -45,6 +45,9 @@ int OnInit()
     // Set initial sync time to start of time (will sync all history)
     lastSyncTime = StringToTime("1970.01.01 00:00:00");
     
+    // Set up timer for real-time monitoring (every 1 second)
+    EventSetTimer(1);
+    
     // Perform initial sync on startup
     Timer();
     
@@ -56,6 +59,8 @@ int OnInit()
 //+------------------------------------------------------------------+
 void OnDeinit(const int reason)
 {
+    // Stop the timer
+    EventKillTimer();
     Print("QuantaView EA stopped. Reason: ", reason);
 }
 
