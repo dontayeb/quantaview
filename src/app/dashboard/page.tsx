@@ -67,7 +67,9 @@ export default function DashboardPage() {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-dashboard-text">QuantaView</h1>
+              <Link href="/dashboard" className="text-xl font-semibold text-dashboard-text hover:text-primary-600 transition-colors duration-200">
+                QuantaView
+              </Link>
             </div>
             <div className="flex items-center">
               <UserNav />

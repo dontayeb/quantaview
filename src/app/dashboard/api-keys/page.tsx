@@ -17,6 +17,7 @@ import {
 } from '@heroicons/react/24/outline'
 import { UserNav } from '@/components/UserNav'
 import { EAIntegrationGuide } from '@/components/EAIntegrationGuide'
+import Link from 'next/link'
 
 interface APIKey {
   id: string
@@ -197,7 +198,9 @@ export default function APIKeysPage() {
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <h1 className="text-xl font-semibold text-gray-900">QuantaView</h1>
+              <Link href="/dashboard" className="text-xl font-semibold text-gray-900 hover:text-primary-600 transition-colors duration-200">
+                QuantaView
+              </Link>
             </div>
             <div className="flex items-center">
               <UserNav />
