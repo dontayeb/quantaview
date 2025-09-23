@@ -85,9 +85,21 @@ async def receive_trade_batch(
                         print(f"Invalid close_time format: {trade_data.close_time}")
                         continue
                 
-                # Validate and truncate fields to fit database constraints
-                symbol = trade_data.symbol[:20] if trade_data.symbol else ""  # Limit to 20 chars
-                trade_type = trade_data.type[:10] if trade_data.type else ""  # Limit to 10 chars
+                # Validate and clean fields to fit database constraints
+                original_symbol = trade_data.symbol or ""
+                original_type = trade_data.type or ""
+                
+                # Remove parentheses and their contents, then truncate to 20 chars
+                import re
+                symbol = re.sub(r'\([^)]*\)', '', original_symbol).strip()[:20]
+                trade_type = original_type.strip()[:10]
+                
+                # Log if we had to modify the symbol
+                if original_symbol != symbol:
+                    print(f"Symbol cleaned: '{original_symbol}' -> '{symbol}' (original: {len(original_symbol)} chars, cleaned: {len(symbol)} chars)")
+                
+                if original_type != trade_type:
+                    print(f"Type modified: '{original_type}' -> '{trade_type}'")
                 
                 # Create new trade record
                 db_trade = TradeModel(

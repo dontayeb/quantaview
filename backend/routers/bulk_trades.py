@@ -104,9 +104,21 @@ async def bulk_import_trades(
                 duplicate_count += 1
                 continue
             
-            # Validate and truncate fields to fit database constraints
-            symbol = trade_item.symbol[:20] if trade_item.symbol else ""  # Limit to 20 chars
-            trade_type = trade_item.trade_type[:10] if trade_item.trade_type else ""  # Limit to 10 chars
+            # Validate and clean fields to fit database constraints
+            original_symbol = trade_item.symbol or ""
+            original_type = trade_item.trade_type or ""
+            
+            # Remove parentheses and their contents, then truncate to 20 chars
+            import re
+            symbol = re.sub(r'\([^)]*\)', '', original_symbol).strip()[:20]
+            trade_type = original_type.strip()[:10]
+            
+            # Log if we had to modify the symbol
+            if original_symbol != symbol:
+                print(f"Symbol cleaned: '{original_symbol}' -> '{symbol}' (original: {len(original_symbol)} chars, cleaned: {len(symbol)} chars)")
+            
+            if original_type != trade_type:
+                print(f"Type modified: '{original_type}' -> '{trade_type}'")
             
             # Convert to database model
             trade = Trade(
