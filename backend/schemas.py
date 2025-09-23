@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from typing import Optional, List
 from datetime import datetime
 from uuid import UUID
@@ -8,6 +8,19 @@ class TradeBase(BaseModel):
     ticket: Optional[str] = None
     symbol: str
     type: str  # buy/sell
+    
+    @validator('symbol')
+    def validate_symbol(cls, v):
+        if v and len(v) > 20:
+            return v[:20]  # Truncate to 20 characters
+        return v
+    
+    @validator('type')
+    def validate_type(cls, v):
+        if v and len(v) > 10:
+            return v[:10]  # Truncate to 10 characters
+        return v.lower() if v else v
+    
     volume: float
     open_price: float
     close_price: Optional[float] = None

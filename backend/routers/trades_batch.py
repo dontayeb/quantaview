@@ -85,6 +85,10 @@ async def receive_trade_batch(
                         print(f"Invalid close_time format: {trade_data.close_time}")
                         continue
                 
+                # Validate and truncate fields to fit database constraints
+                symbol = trade_data.symbol[:20] if trade_data.symbol else ""  # Limit to 20 chars
+                trade_type = trade_data.type[:10] if trade_data.type else ""  # Limit to 10 chars
+                
                 # Create new trade record
                 db_trade = TradeModel(
                     id=uuid.uuid4(),
@@ -92,8 +96,8 @@ async def receive_trade_batch(
                     position=trade_data.position_id,
                     ticket=trade_data.deal_id,
                     magic_number=0,  # MT5 positions don't use magic numbers the same way
-                    symbol=trade_data.symbol,
-                    type=trade_data.type,
+                    symbol=symbol,
+                    type=trade_type,
                     volume=trade_data.volume,
                     open_price=trade_data.open_price,
                     close_price=trade_data.close_price,

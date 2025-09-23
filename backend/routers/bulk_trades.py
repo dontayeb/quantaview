@@ -104,13 +104,17 @@ async def bulk_import_trades(
                 duplicate_count += 1
                 continue
             
+            # Validate and truncate fields to fit database constraints
+            symbol = trade_item.symbol[:20] if trade_item.symbol else ""  # Limit to 20 chars
+            trade_type = trade_item.trade_type[:10] if trade_item.trade_type else ""  # Limit to 10 chars
+            
             # Convert to database model
             trade = Trade(
                 id=uuid.uuid4(),
                 trading_account_id=trading_account.id,
                 ticket=trade_item.ticket,
-                symbol=trade_item.symbol,
-                trade_type=trade_item.trade_type,
+                symbol=symbol,
+                trade_type=trade_type,
                 volume=trade_item.volume,
                 open_time=trade_item.open_time,
                 open_price=trade_item.open_price,
