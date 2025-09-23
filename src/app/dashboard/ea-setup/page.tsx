@@ -141,7 +141,7 @@ export default function EASetupPage() {
     setDownloadLoading(true)
     try {
       // Download EA file directly from public folder
-      const filename = 'QuantaView_EA.ex5'
+      const filename = 'QuantaViewSync.ex5'
       const url = `/downloads/${filename}`
       
       const response = await fetch(url)
@@ -289,7 +289,7 @@ export default function EASetupPage() {
           <div className="p-6 space-y-4">
             <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
               <div className="space-y-1">
-                <p className="font-medium text-gray-900">QuantaView_EA.ex5</p>
+                <p className="font-medium text-gray-900">QuantaViewSync.ex5</p>
                 <p className="text-sm text-gray-600">
                   Pre-compiled MT5 Expert Advisor - ready to use with any QuantaView account
                 </p>

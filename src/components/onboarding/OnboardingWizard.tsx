@@ -62,13 +62,10 @@ export default function OnboardingWizard({
     try {
       setIsDownloading(true)
       
-      // Create download URL
-      const downloadUrl = `${process.env.NEXT_PUBLIC_API_URL}/api/v1/ea/download/${accountId}?api_key=${apiKey}`
-      
-      // Trigger download
+      // Download the pre-compiled EA directly
       const link = document.createElement('a')
-      link.href = downloadUrl
-      link.download = `QuantaView_${accountName}.mq5`
+      link.href = '/downloads/QuantaViewSync.ex5'
+      link.download = 'QuantaViewSync.ex5'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
