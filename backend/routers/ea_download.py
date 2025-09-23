@@ -203,7 +203,7 @@ async def get_setup_instructions(
                 },
                 {
                     "step": 4,
-                    "title": "Install in MetaTrader",
+                    "title": "Install EA in MetaTrader",
                     "description": "Copy the EA file to your MetaTrader Experts folder and restart the platform.",
                     "action": "MT4: File → Open Data Folder → MQL4 → Experts\nMT5: File → Open Data Folder → MQL5 → Experts"
                 },

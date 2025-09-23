@@ -3,6 +3,8 @@
 import { useState, useEffect } from 'react'
 import { CheckCircleIcon, CloudArrowDownIcon, ArrowTopRightOnSquareIcon, ExclamationTriangleIcon, PlayIcon } from '@heroicons/react/24/outline'
 import { quantaAPI } from '@/lib/api'
+import Link from 'next/link'
+import { UserNav } from '@/components/UserNav'
 
 interface OnboardingStep {
   step: number
@@ -106,7 +108,24 @@ export default function OnboardingWizard({
   }
 
   return (
-    <div className="max-w-4xl mx-auto space-y-6">
+    <div className="min-h-screen bg-dashboard-bg">
+      {/* Navigation */}
+      <nav className="bg-dashboard-card shadow-dashboard border-b border-gray-100">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/dashboard" className="text-xl font-semibold text-dashboard-text hover:text-primary-600 transition-colors duration-200">
+                QuantaView
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <UserNav />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      <div className="max-w-4xl mx-auto space-y-6 py-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center gap-2 mb-2">
@@ -180,9 +199,18 @@ export default function OnboardingWizard({
               <div className="flex-1">
                 <h3 className="font-semibold text-lg mb-2">{step.title}</h3>
                 <p className="text-gray-600 mb-4">{step.description}</p>
-                <p className="text-sm text-gray-800 mb-4 bg-gray-50 p-3 rounded">
-                  <strong>Action:</strong> {step.action}
-                </p>
+                <div className="text-sm text-gray-800 mb-4 bg-gray-50 p-3 rounded">
+                  <strong>Action:</strong>
+                  {step.action.includes('MT4:') && step.action.includes('MT5:') ? (
+                    <div className="mt-1 space-y-1">
+                      {step.action.split('\n').map((line, index) => (
+                        <div key={index}>{line}</div>
+                      ))}
+                    </div>
+                  ) : (
+                    <span className="ml-1">{step.action}</span>
+                  )}
+                </div>
                 
                 {/* Step-specific actions */}
                 {step.step === 1 && (
@@ -303,6 +331,7 @@ export default function OnboardingWizard({
           </button>
         </div>
       )}
+      </div>
     </div>
   )
 }

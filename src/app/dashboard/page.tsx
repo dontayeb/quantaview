@@ -113,6 +113,14 @@ export default function DashboardPage() {
                 <BoltIcon className="h-4 w-4 mr-2" />
                 EA Setup
               </Link>
+
+              <Link
+                href="/onboarding"
+                className="inline-flex items-center px-4 py-2 border border-blue-200 text-sm font-medium rounded-lg shadow-dashboard text-blue-700 bg-blue-50 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 whitespace-nowrap transition-all duration-200"
+              >
+                <PlusIcon className="h-4 w-4 mr-2" />
+                Quick Setup
+              </Link>
               
               <Link
                 href="/dashboard/accounts/new"
