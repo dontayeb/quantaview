@@ -197,18 +197,12 @@ async def get_setup_instructions(
                 },
                 {
                     "step": 3,
-                    "title": "Install EA in MT5",
-                    "description": "Add the EA to MetaEditor and compile it",
-                    "action": "Press F4 → File → Open → Select your downloaded .mq5 file → Press F7 to compile"
-                },
-                {
-                    "step": 4,
                     "title": "Attach EA to Any Chart", 
                     "description": "The EA will sync all your trades automatically",
                     "action": "Drag the EA from Navigator to any chart → Make sure AutoTrading is ON (green button)"
                 },
                 {
-                    "step": 5,
+                    "step": 4,
                     "title": "Verify Connection",
                     "description": "Check that your trades are syncing",
                     "action": "Look for 'QuantaView EA initialized' in the Expert tab → Refresh your QuantaView dashboard"
