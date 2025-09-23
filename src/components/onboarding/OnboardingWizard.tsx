@@ -86,7 +86,7 @@ export default function OnboardingWizard({
       newSet.add(stepNumber)
       return newSet
     })
-    if (stepNumber === currentStep && stepNumber < 4) {
+    if (stepNumber === currentStep && stepNumber < 6) {
       setCurrentStep(stepNumber + 1)
     }
   }
@@ -97,7 +97,7 @@ export default function OnboardingWizard({
   }
 
   const finishOnboarding = () => {
-    markStepCompleted(4)
+    markStepCompleted(6)
     onComplete?.()
   }
 
@@ -121,7 +121,7 @@ export default function OnboardingWizard({
       {/* Progress Bar */}
       <div className="bg-white rounded-lg shadow p-6">
         <div className="flex items-center justify-between mb-4">
-          {[1, 2, 3, 4].map((step) => (
+          {[1, 2, 3, 4, 5, 6].map((step) => (
             <div key={step} className="flex items-center">
               <div className={`
                 w-10 h-10 rounded-full flex items-center justify-center text-sm font-medium
@@ -138,7 +138,7 @@ export default function OnboardingWizard({
                   step
                 )}
               </div>
-              {step < 4 && (
+              {step < 6 && (
                 <div className={`
                   w-16 h-1 mx-2
                   ${completedSteps.has(step) ? 'bg-green-200' : 'bg-gray-200'}
@@ -148,7 +148,7 @@ export default function OnboardingWizard({
           ))}
         </div>
         <div className="text-center text-sm text-gray-600">
-          Step {currentStep} of 4 • {completedSteps.size}/4 completed
+          Step {currentStep} of 6 • {completedSteps.size}/6 completed
         </div>
       </div>
 
@@ -220,19 +220,45 @@ export default function OnboardingWizard({
                     disabled={completedSteps.has(3)}
                     className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    EA Installed in MetaTrader
+                    Auto Trading Enabled
                   </button>
                 )}
                 
                 {step.step === 4 && (
                   <button 
-                    onClick={finishOnboarding}
+                    onClick={() => markStepCompleted(4)}
                     disabled={completedSteps.has(4)}
-                    className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    <CheckCircleIcon className="w-4 h-4 mr-2" />
-                    Complete Setup
+                    EA Installed in MetaTrader
                   </button>
+                )}
+                
+                {step.step === 5 && (
+                  <button 
+                    onClick={() => markStepCompleted(5)}
+                    disabled={completedSteps.has(5)}
+                    className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    EA Attached to Chart
+                  </button>
+                )}
+                
+                {step.step === 6 && (
+                  <div className="space-y-3">
+                    <div className="text-xs text-gray-500 space-y-1">
+                      <div>API Key: <code className="bg-gray-100 px-2 py-1 rounded">{apiKey}</code></div>
+                      <div>Account ID: <code className="bg-gray-100 px-2 py-1 rounded">{accountId}</code></div>
+                    </div>
+                    <button 
+                      onClick={finishOnboarding}
+                      disabled={completedSteps.has(6)}
+                      className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
+                    >
+                      <CheckCircleIcon className="w-4 h-4 mr-2" />
+                      Complete Setup
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -259,7 +285,7 @@ export default function OnboardingWizard({
       </div>
 
       {/* Success State */}
-      {completedSteps.size === 4 && (
+      {completedSteps.size === 6 && (
         <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
           <CheckCircleIcon className="w-16 h-16 text-green-600 mx-auto mb-4" />
           <h3 className="text-xl font-semibold text-green-800 mb-2">

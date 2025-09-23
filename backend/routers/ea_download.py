@@ -197,15 +197,27 @@ async def get_setup_instructions(
                 },
                 {
                     "step": 3,
+                    "title": "Enable Auto Trading",
+                    "description": "Enable auto trading in MT5 so the EA can function properly.",
+                    "action": "Click 'Auto Trading' button in toolbar (should turn green)"
+                },
+                {
+                    "step": 4,
                     "title": "Install in MetaTrader",
                     "description": "Copy the EA file to your MetaTrader Experts folder and restart the platform.",
                     "action": "MT4: File → Open Data Folder → MQL4 → Experts\nMT5: File → Open Data Folder → MQL5 → Experts"
                 },
                 {
-                    "step": 4,
-                    "title": "Attach EA to Chart & Verify",
-                    "description": "Drag the EA to any chart and verify the connection is working",
-                    "action": "Drag the EA from Navigator to any chart → Make sure AutoTrading is ON → Check for 'QuantaView EA initialized' in Expert tab"
+                    "step": 5,
+                    "title": "Attach EA to Chart",
+                    "description": "Drag the QuantaView EA from Navigator onto any chart and configure parameters.",
+                    "action": "Navigator → Expert Advisors → QuantaView EA → drag to chart"
+                },
+                {
+                    "step": 6,
+                    "title": "Configure EA Parameters & Verify",
+                    "description": "In the EA settings dialog, enter your QuantaView credentials and verify the connection.",
+                    "action": "Set ApiKey and AccountId parameters → Check for 'QuantaView EA initialized' in Expert tab"
                 }
             ],
             "troubleshooting": {
