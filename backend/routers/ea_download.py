@@ -197,15 +197,15 @@ async def get_setup_instructions(
                 },
                 {
                     "step": 3,
-                    "title": "Attach EA to Any Chart", 
-                    "description": "The EA will sync all your trades automatically",
-                    "action": "Drag the EA from Navigator to any chart → Make sure AutoTrading is ON (green button)"
+                    "title": "Install in MetaTrader",
+                    "description": "Copy the EA file to your MetaTrader Experts folder and restart the platform.",
+                    "action": "MT4: File → Open Data Folder → MQL4 → Experts\nMT5: File → Open Data Folder → MQL5 → Experts"
                 },
                 {
                     "step": 4,
-                    "title": "Verify Connection",
-                    "description": "Check that your trades are syncing",
-                    "action": "Look for 'QuantaView EA initialized' in the Expert tab → Refresh your QuantaView dashboard"
+                    "title": "Attach EA to Chart & Verify",
+                    "description": "Drag the EA to any chart and verify the connection is working",
+                    "action": "Drag the EA from Navigator to any chart → Make sure AutoTrading is ON → Check for 'QuantaView EA initialized' in Expert tab"
                 }
             ],
             "troubleshooting": {

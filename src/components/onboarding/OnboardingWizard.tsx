@@ -220,14 +220,14 @@ export default function OnboardingWizard({
                     disabled={completedSteps.has(3)}
                     className="border border-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    EA Attached to Chart
+                    EA Installed in MetaTrader
                   </button>
                 )}
                 
                 {step.step === 4 && (
                   <button 
                     onClick={finishOnboarding}
-                    disabled={completedSteps.has(5)}
+                    disabled={completedSteps.has(4)}
                     className="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
                   >
                     <CheckCircleIcon className="w-4 h-4 mr-2" />
