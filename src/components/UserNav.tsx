@@ -11,7 +11,6 @@ import {
   ArrowRightOnRectangleIcon,
   KeyIcon
 } from '@heroicons/react/24/outline'
-import { ThemeToggle } from './ThemeToggle'
 
 export function UserNav() {
   const router = useRouter()
@@ -25,9 +24,7 @@ export function UserNav() {
   if (!user) return null
 
   return (
-    <div className="flex items-center space-x-3">
-      <ThemeToggle />
-      <Menu as="div" className="relative inline-block text-left">
+    <Menu as="div" className="relative inline-block text-left">
       <div>
         <MenuButton className="flex items-center text-sm rounded-full text-dashboard-textLight hover:text-dashboard-text focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors duration-200">
           <span className="sr-only">Open user menu</span>
@@ -117,7 +114,6 @@ export function UserNav() {
           </div>
         </MenuItems>
       </Transition>
-      </Menu>
-    </div>
+    </Menu>
   )
 }
