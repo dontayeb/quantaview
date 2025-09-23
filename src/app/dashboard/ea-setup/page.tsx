@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react'
 import { ArrowDownTrayIcon, CheckCircleIcon, ExclamationCircleIcon, ClipboardIcon, Cog6ToothIcon, BoltIcon } from '@heroicons/react/24/outline'
 import Link from 'next/link'
+import { UserNav } from '@/components/UserNav'
 
 interface TradingAccount {
   id: string
@@ -176,7 +177,25 @@ export default function EASetupPage() {
   const selectedAccountData = accounts.find(acc => acc.id === selectedAccount)
 
   return (
-    <div className="container mx-auto py-8 space-y-6 max-w-4xl">
+    <div className="min-h-screen bg-dashboard-bg">
+      {/* Navigation */}
+      <nav className="bg-dashboard-card shadow-dashboard border-b border-gray-100">
+        <div className="w-full px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            <div className="flex items-center">
+              <Link href="/dashboard" className="text-xl font-semibold text-dashboard-text hover:text-primary-600 transition-colors duration-200">
+                QuantaView
+              </Link>
+            </div>
+            <div className="flex items-center">
+              <UserNav />
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Main Content */}
+      <div className="container mx-auto py-8 space-y-6 max-w-4xl px-4 sm:px-6 lg:px-8">
       {/* Toast notification */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg border shadow-lg ${
@@ -425,6 +444,7 @@ export default function EASetupPage() {
             </Link>
           </div>
         </div>
+      </div>
       </div>
     </div>
   )

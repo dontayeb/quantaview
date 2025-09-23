@@ -159,6 +159,19 @@ export default function APIKeysPage() {
     }
   }
 
+  const handleDeleteKey = async (keyId: string) => {
+    if (!confirm('Are you sure you want to permanently delete this revoked API key? This action cannot be undone.')) {
+      return
+    }
+
+    try {
+      await quantaAPI.revokeApiKey(keyId) // Same endpoint, but for permanent deletion of revoked keys
+      fetchApiKeys()
+    } catch (error) {
+      console.error('Error deleting API key:', error)
+    }
+  }
+
   const copyToClipboard = (text: string) => {
     navigator.clipboard.writeText(text)
   }
@@ -339,13 +352,21 @@ export default function APIKeysPage() {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        {apiKey.is_active && (
+                        {apiKey.is_active ? (
                           <button
                             onClick={() => handleRevokeKey(apiKey.id)}
                             className="inline-flex items-center px-3 py-2 border border-red-300 text-sm font-medium rounded-md text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                           >
                             <TrashIcon className="h-4 w-4 mr-1" />
                             Revoke
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleDeleteKey(apiKey.id)}
+                            className="inline-flex items-center px-3 py-2 border border-red-600 text-sm font-medium rounded-md text-red-800 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                          >
+                            <TrashIcon className="h-4 w-4 mr-1" />
+                            Delete
                           </button>
                         )}
                       </div>
