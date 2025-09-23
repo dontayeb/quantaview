@@ -17,11 +17,13 @@ class TradeBatch(BaseModel):
     symbol: str
     type: str  # "buy" or "sell"
     volume: float
-    price: float
+    open_price: float
+    close_price: float
     commission: float
     swap: float
     profit: float
-    time: str  # ISO datetime string
+    open_time: str  # ISO datetime string
+    close_time: str  # ISO datetime string
     comment: str = ""
 
 class TradeBatchRequest(BaseModel):
@@ -60,16 +62,27 @@ async def receive_trade_batch(
                     skipped_count += 1
                     continue
                 
-                # Parse the datetime string - handle both ISO format and MT4/MT5 format
+                # Parse the datetime strings - handle both ISO format and MT4/MT5 format
                 try:
-                    # Try ISO format first (e.g., "2025-09-22T02:18:19.000Z")
-                    trade_time = datetime.fromisoformat(trade_data.time.replace('Z', '+00:00'))
+                    # Try ISO format first for open time
+                    open_time = datetime.fromisoformat(trade_data.open_time.replace('Z', '+00:00'))
                 except ValueError:
                     try:
-                        # Try MT4/MT5 format (e.g., "2025.09.15 03:36:43")
-                        trade_time = datetime.strptime(trade_data.time, '%Y.%m.%d %H:%M:%S')
+                        # Try MT4/MT5 format
+                        open_time = datetime.strptime(trade_data.open_time, '%Y.%m.%d %H:%M:%S')
                     except ValueError:
-                        print(f"Invalid datetime format: {trade_data.time}")
+                        print(f"Invalid open_time format: {trade_data.open_time}")
+                        continue
+                
+                try:
+                    # Try ISO format first for close time
+                    close_time = datetime.fromisoformat(trade_data.close_time.replace('Z', '+00:00'))
+                except ValueError:
+                    try:
+                        # Try MT4/MT5 format
+                        close_time = datetime.strptime(trade_data.close_time, '%Y.%m.%d %H:%M:%S')
+                    except ValueError:
+                        print(f"Invalid close_time format: {trade_data.close_time}")
                         continue
                 
                 # Create new trade record
@@ -78,19 +91,19 @@ async def receive_trade_batch(
                     trading_account_id=account_uuid,
                     position=trade_data.position_id,
                     ticket=trade_data.deal_id,
-                    magic_number=0,  # MT5 deals don't have magic numbers like positions do
+                    magic_number=0,  # MT5 positions don't use magic numbers the same way
                     symbol=trade_data.symbol,
                     type=trade_data.type,
                     volume=trade_data.volume,
-                    open_price=trade_data.price,
-                    close_price=trade_data.price,  # For deals, open and close price are the same
+                    open_price=trade_data.open_price,
+                    close_price=trade_data.close_price,
                     stop_loss=None,
                     take_profit=None,
                     profit=trade_data.profit,
                     commission=trade_data.commission,
                     swap=trade_data.swap,
-                    open_time=trade_time,
-                    close_time=trade_time,  # For deals, this represents the execution time
+                    open_time=open_time,
+                    close_time=close_time,
                     comment=trade_data.comment
                 )
                 
