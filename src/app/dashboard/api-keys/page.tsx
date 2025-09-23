@@ -167,8 +167,10 @@ export default function APIKeysPage() {
     try {
       await quantaAPI.revokeApiKey(keyId) // Same endpoint, but for permanent deletion of revoked keys
       fetchApiKeys()
+      alert('API key deleted successfully')
     } catch (error) {
       console.error('Error deleting API key:', error)
+      alert(`Failed to delete API key: ${error}`)
     }
   }
 
@@ -205,13 +207,13 @@ export default function APIKeysPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-dashboard-bg">
       {/* Navigation */}
-      <nav className="bg-white shadow">
+      <nav className="bg-dashboard-card shadow border-b border-gray-100 dark:border-gray-600">
         <div className="w-full px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/dashboard" className="text-xl font-semibold text-gray-900 hover:text-primary-600 transition-colors duration-200">
+              <Link href="/dashboard" className="text-xl font-semibold text-dashboard-text hover:text-primary-600 transition-colors duration-200">
                 QuantaView
               </Link>
             </div>
@@ -228,8 +230,8 @@ export default function APIKeysPage() {
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">API Keys</h2>
-              <p className="text-gray-600">Manage your API keys for EA integration and external access</p>
+              <h2 className="text-2xl font-bold text-dashboard-text">API Keys</h2>
+              <p className="text-dashboard-textLight">Manage your API keys for EA integration and external access</p>
             </div>
             
             <button
@@ -293,9 +295,9 @@ export default function APIKeysPage() {
           )}
 
           {/* API Keys List */}
-          <div className="bg-white shadow rounded-lg">
-            <div className="px-6 py-4 border-b border-gray-200">
-              <h3 className="text-lg font-medium text-gray-900">Your API Keys</h3>
+          <div className="bg-dashboard-card shadow rounded-lg border border-gray-100 dark:border-gray-600">
+            <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-600">
+              <h3 className="text-lg font-medium text-dashboard-text">Your API Keys</h3>
             </div>
             
             {loading ? (
@@ -333,7 +335,7 @@ export default function APIKeysPage() {
                             <span className="font-medium">Key:</span> {apiKey.key_prefix}
                           </p>
                           <p className="text-sm text-gray-600">
-                            <span className="font-medium">Scopes:</span> {apiKey.scopes.join(', ')}
+                            <span className="font-medium">Scopes:</span> {Array.isArray(apiKey.scopes) ? apiKey.scopes.join(', ') : apiKey.scopes}
                           </p>
                           <p className="text-sm text-gray-600">
                             <span className="font-medium">Created:</span> {formatDate(apiKey.created_at)}

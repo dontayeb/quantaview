@@ -6,6 +6,7 @@ const config: Config = {
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -17,12 +18,12 @@ const config: Config = {
           700: '#4c1d95',
         },
         dashboard: {
-          bg: '#f8fafc',
-          card: '#ffffff',
+          bg: 'rgb(var(--color-bg) / <alpha-value>)',
+          card: 'rgb(var(--color-card) / <alpha-value>)',
           sidebar: '#f1f5f9',
           dark: '#0f172a',
-          text: '#1f2937',
-          textLight: '#6b7280',
+          text: 'rgb(var(--color-text) / <alpha-value>)',
+          textLight: 'rgb(var(--color-text-light) / <alpha-value>)',
           success: '#10b981',
           accent: '#6366f1',
         },

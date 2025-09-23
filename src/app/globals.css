@@ -3,14 +3,38 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light theme colors */
+    --color-bg: 249 250 251; /* gray-50 */
+    --color-card: 255 255 255; /* white */
+    --color-text: 17 24 39; /* gray-900 */
+    --color-text-light: 107 114 128; /* gray-500 */
+    --color-border: 229 231 235; /* gray-200 */
+    --color-primary-50: 239 246 255;
+    --color-primary-500: 59 130 246;
+    --color-primary-600: 37 99 235;
+  }
+
+  .dark {
+    /* Dark theme colors */
+    --color-bg: 17 24 39; /* gray-900 */
+    --color-card: 31 41 55; /* gray-800 */
+    --color-text: 243 244 246; /* gray-100 */
+    --color-text-light: 156 163 175; /* gray-400 */
+    --color-border: 75 85 99; /* gray-600 */
+    --color-primary-50: 30 58 138;
+    --color-primary-500: 59 130 246;
+    --color-primary-600: 96 165 250;
+  }
+
   body {
-    @apply bg-dashboard-bg text-dashboard-text;
+    @apply bg-dashboard-bg text-dashboard-text transition-colors duration-200;
   }
 }
 
 @layer components {
   .card {
-    @apply bg-dashboard-card rounded-xl shadow-dashboard border border-gray-100 p-6;
+    @apply bg-dashboard-card rounded-xl shadow-dashboard border border-gray-100 dark:border-gray-600 p-6 transition-colors duration-200;
   }
   
   .card-hover {
@@ -22,6 +46,6 @@
   }
   
   .btn-secondary {
-    @apply bg-dashboard-card hover:bg-gray-50 text-dashboard-textLight border border-gray-200 font-medium px-4 py-2 rounded-lg shadow-dashboard transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
+    @apply bg-dashboard-card hover:bg-gray-50 dark:hover:bg-gray-700 text-dashboard-textLight border border-gray-200 dark:border-gray-600 font-medium px-4 py-2 rounded-lg shadow-dashboard transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500;
   }
 }
