@@ -25,7 +25,7 @@ async def get_trades(account_id: UUID, db: Session = Depends(get_db)):
                     "id": str(trade.id),
                     "trading_account_id": str(trade.trading_account_id),
                     "position": trade.position,
-                    "ticket": str(trade.ticket) if trade.ticket is not None else None,
+                    "ticket": trade.ticket,
                     "magic_number": trade.magic_number,
                     "symbol": trade.symbol,
                     "type": trade.type,

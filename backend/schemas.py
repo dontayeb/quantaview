@@ -5,7 +5,7 @@ from uuid import UUID
 
 # Trade schemas
 class TradeBase(BaseModel):
-    ticket: Optional[str] = None
+    ticket: Optional[int] = None
     symbol: str
     type: str  # buy/sell
     
